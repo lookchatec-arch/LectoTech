@@ -1,26 +1,33 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-academic-blue: #2A5C82;
+  --color-creative-yellow: #FFD700;
+  --color-progress-green: #4CAF50;
+  --color-paper-cream: #F9F7F1;
+  --color-motivation-orange: #FF8C00;
+  
+  --background: var(--color-paper-cream);
+  --foreground: #1A202C; /* Texto oscuro para buen contraste */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-academic-blue: var(--color-academic-blue);
+  --color-creative-yellow: var(--color-creative-yellow);
+  --color-progress-green: var(--color-progress-green);
+  --color-paper-cream: var(--color-paper-cream);
+  --color-motivation-orange: var(--color-motivation-orange);
+  
+  --font-sans: var(--font-montserrat), var(--font-open-sans), sans-serif;
+  --font-heading: var(--font-montserrat), sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* Modo oscuro deshabilitado intencionalmente para preservar colores de neuroeducación */
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+  font-family: var(--font-sans);
 }
