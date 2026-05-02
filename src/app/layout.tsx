@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Montserrat, Open_Sans } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -27,7 +28,11 @@ export default function RootLayout({
       lang="es"
       className={`${montserrat.variable} ${openSans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#2A5C82]"></div></div>}>
+          {children}
+        </Suspense>
+      </body>
     </html>
   );
 }
