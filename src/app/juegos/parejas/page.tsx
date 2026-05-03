@@ -87,7 +87,12 @@ export default function ParejasPage() {
               style={{ perspective: '1000px' }}
             >
               {carta.volteada || carta.emparejado ? (
-                <span className="text-xl md:text-3xl font-bold text-[#1A202C]">{carta.texto}</span>
+                <span 
+                  className="text-xl md:text-3xl font-bold text-[#1A202C]" 
+                  style={{ transform: 'rotateY(180deg)' }}
+                >
+                  {carta.texto}
+                </span>
               ) : (
                 <span className="text-4xl text-white opacity-50">?</span>
               )}

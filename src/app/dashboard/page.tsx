@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { SabiasQue } from '@/components/SabiasQue';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -42,6 +43,8 @@ export default function DashboardPage() {
           <span className="font-bold text-[#FFD700] text-xl">120</span>
         </div>
       </header>
+
+      <SabiasQue />
 
       {/* Camino de Duolingo (Path) */}
       <div className="relative flex flex-col items-center gap-8 py-8">
