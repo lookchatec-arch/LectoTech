@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import jsPDF from 'jspdf';
@@ -15,11 +15,28 @@ export default function ProfesorPage() {
 
   // Clases y Estudiantes State
   const [clases, setClases] = useState([{ id: 1, nombre: '5to Básica', codigo: 'DEMO-5A' }]);
-  const [estudiantes, setEstudiantes] = useState([
+  const [estudiantes, setEstudiantes] = useState<any[]>([
     { id: 1, nombre: 'Mateo Rojas', clase: '5to Básica', avance: 85 },
     { id: 2, nombre: 'Lucía Silva', clase: '5to Básica', avance: 40 },
     { id: 3, nombre: 'Ana Gómez', clase: '6to Básica', avance: 90 },
   ]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('lectotech_estudiantes');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.length > 0) {
+          setEstudiantes((prev) => {
+            const nuevos = parsed.filter((p: any) => !prev.some(e => e.nombre === p.nombre));
+            return [...prev, ...nuevos];
+          });
+        }
+      } catch (e) {
+        console.error("Error reading localStorage", e);
+      }
+    }
+  }, []);
 
   // Actividades State
   const [actividades, setActividades] = useState([

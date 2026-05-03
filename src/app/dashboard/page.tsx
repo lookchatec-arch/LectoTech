@@ -24,10 +24,11 @@ export default function DashboardPage() {
   const niveles = [
     { id: 1, tipo: 'lectura', titulo: 'El Misterio del Volcán', icono: '🌋', color: 'bg-[#FFD700]', ruta: `/lectura/el-misterio?grado=${estudianteInfo.grado}`, completado: true },
     { id: 2, tipo: 'juego', titulo: 'Adivina la Palabra', icono: '🤔', color: 'bg-[#FF8C00]', ruta: `/juegos/adivina?grado=${estudianteInfo.grado}`, completado: true },
-    { id: 3, tipo: 'lectura', titulo: 'El Bosque Encantado', icono: '🌲', color: 'bg-[#4CAF50]', ruta: `/biblioteca`, completado: false, actual: true },
-    { id: 4, tipo: 'juego', titulo: 'Cazador de Verbos', icono: '🏃‍♂️', color: 'bg-gray-300', ruta: `/juegos/verbos?grado=${estudianteInfo.grado}`, completado: false, bloqueado: true },
-    { id: 5, tipo: 'juego', titulo: 'Parejas de Sinónimos', icono: '🃏', color: 'bg-gray-300', ruta: `/juegos/parejas?grado=${estudianteInfo.grado}`, completado: false, bloqueado: true },
-    { id: 6, tipo: 'taller', titulo: 'Taller de Escritura', icono: '✍️', color: 'bg-gray-300', ruta: `/taller`, completado: false, bloqueado: true },
+    { id: 3, tipo: 'lectura', titulo: 'El Bosque Encantado', icono: '🌲', color: 'bg-[#4CAF50]', ruta: `/biblioteca`, completado: true, actual: false },
+    { id: 4, tipo: 'juego', titulo: 'Cazador de Verbos', icono: '🏃‍♂️', color: 'bg-[#2A5C82]', ruta: `/juegos/verbos?grado=${estudianteInfo.grado}`, completado: false, bloqueado: false },
+    { id: 5, tipo: 'juego', titulo: 'Sopa de Letras', icono: '🔍', color: 'bg-[#E91E63]', ruta: `/juegos/sopa?grado=${estudianteInfo.grado}`, completado: false, bloqueado: false, actual: true },
+    { id: 6, tipo: 'juego', titulo: 'Parejas de Sinónimos', icono: '🃏', color: 'bg-[#9C27B0]', ruta: `/juegos/parejas?grado=${estudianteInfo.grado}`, completado: false, bloqueado: false },
+    { id: 7, tipo: 'taller', titulo: 'Taller de Escritura', icono: '✍️', color: 'bg-[#FF5722]', ruta: `/taller`, completado: false, bloqueado: false },
   ];
 
   return (
@@ -62,8 +63,9 @@ export default function DashboardPage() {
           return (
             <div key={nivel.id} className={`relative z-10 flex flex-col items-center ${offset} transition-transform hover:scale-105`}>
               {/* Tooltip con el nombre del nivel */}
-              <div className="absolute -top-10 bg-white px-3 py-1 rounded-xl shadow-md border border-gray-100 whitespace-nowrap text-sm font-bold text-gray-700 opacity-0 hover:opacity-100 transition-opacity peer">
+              <div className="absolute -top-10 bg-gray-900 px-4 py-2 rounded-xl shadow-lg border-none whitespace-nowrap text-sm font-bold text-white opacity-0 hover:opacity-100 transition-opacity peer">
                 {nivel.titulo}
+                {nivel.bloqueado && " 🔒"}
               </div>
 
               {/* Botón Circular del Nivel */}
@@ -71,7 +73,7 @@ export default function DashboardPage() {
                 onClick={() => !nivel.bloqueado && router.push(nivel.ruta)}
                 className={`w-24 h-24 rounded-full flex items-center justify-center text-4xl shadow-xl border-b-8 active:border-b-0 active:translate-y-2 transition-all
                   ${nivel.color} 
-                  ${nivel.bloqueado ? 'border-gray-400 opacity-60 cursor-not-allowed' : 
+                  ${nivel.bloqueado ? 'border-gray-400 bg-gray-200 grayscale contrast-125 cursor-not-allowed' : 
                     nivel.completado ? 'border-yellow-600' : 'border-green-700 ring-4 ring-green-300 animate-pulse'}
                 `}
               >

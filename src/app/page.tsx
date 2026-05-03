@@ -16,6 +16,7 @@ export default function Home() {
   
   // Forms state
   const [studentName, setStudentName] = useState("");
+  const [studentEmail, setStudentEmail] = useState("");
   const [classCode, setClassCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -33,15 +34,26 @@ export default function Home() {
         .eq('code', classCode)
         .single();
 
+      const syncLocal = () => {
+        const estudiantes = JSON.parse(localStorage.getItem('lectotech_estudiantes') || '[]');
+        // Evitar duplicados por email
+        if (!estudiantes.some((e: any) => e.email === studentEmail)) {
+          estudiantes.push({ id: Date.now(), nombre: studentName, email: studentEmail, clase: classCode.toUpperCase(), avance: 0 });
+          localStorage.setItem('lectotech_estudiantes', JSON.stringify(estudiantes));
+        }
+      };
+
       if (error || !clase) {
         // Fallback simulado para demostración si la BD no está lista aún
         if (classCode.toUpperCase() === 'DEMO-5A') {
+          syncLocal();
           router.push(`/dashboard?estudiante=${encodeURIComponent(studentName)}&grado=5`);
         } else {
           setErrorMsg("Código de clase inválido. Intenta con DEMO-5A.");
         }
       } else {
         // Si la base de datos está lista y el código existe
+        syncLocal();
         router.push(`/dashboard?estudiante=${encodeURIComponent(studentName)}&grado=5`);
       }
     } catch (err) {
@@ -117,6 +129,17 @@ export default function Home() {
                   onChange={(e) => setStudentName(e.target.value)}
                   className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-[#4CAF50] outline-none"
                   placeholder="Ej. Mateo el Explorador"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Correo Electrónico</label>
+                <input 
+                  type="email" 
+                  required
+                  value={studentEmail}
+                  onChange={(e) => setStudentEmail(e.target.value)}
+                  className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-[#4CAF50] outline-none"
+                  placeholder="estudiante@escuela.com"
                 />
               </div>
               <div>
