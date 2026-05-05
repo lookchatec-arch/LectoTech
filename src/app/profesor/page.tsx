@@ -187,14 +187,43 @@ export default function ProfesorPage() {
   };
 
   const exportarPDF = async () => {
-    if (!statsRef.current) return;
-    const canvas = await html2canvas(statsRef.current);
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save('reporte_estadisticas_docente.pdf');
+    setLoading(true);
+    const element = statsRef.current;
+    if (!element) return;
+
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        windowWidth: 1200
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      // Añadir encabezado decorativo al PDF
+      pdf.setFillColor(42, 92, 130); // Color LectoTech
+      pdf.rect(0, 0, pdfWidth, 20, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(14);
+      pdf.text('LECTOTECH - REPORTE ANALÍTICO DOCENTE', 10, 13);
+      
+      pdf.addImage(imgData, 'PNG', 0, 25, pdfWidth, pdfHeight);
+      
+      // Pie de página
+      pdf.setFontSize(10);
+      pdf.setTextColor(150, 150, 150);
+      pdf.text(`Generado el: ${new Date().toLocaleString()} | Docente: ${perfil.nombre}`, 10, pdf.internal.pageSize.getHeight() - 10);
+      
+      pdf.save(`Reporte_LectoTech_${perfil.nombre.replace(' ', '_')}.pdf`);
+    } catch (error) {
+      console.error("Error al generar PDF:", error);
+      alert("Hubo un error al generar el reporte. Por favor, intenta de nuevo.");
+    }
+    setLoading(false);
   };
 
   const NavItem = ({ id, icon, label }: { id: typeof activeTab, icon: string, label: string }) => (
@@ -281,45 +310,103 @@ export default function ProfesorPage() {
           
           {activeTab === 'panel' && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-black text-gray-800 tracking-tight">Estadísticas Generales</h2>
-                <Button onClick={exportarPDF} className="bg-[#FF8C00] hover:bg-orange-600 text-white shadow-lg flex gap-2">
-                  <span>📄</span> Descargar Reporte
-                </Button>
+              <div className="flex justify-end mb-4">
+            <Button onClick={exportarPDF} disabled={loading} className="bg-[#FF8C00] hover:bg-orange-600 text-white shadow-lg flex gap-2">
+              <span>{loading ? '⌛' : '📄'}</span> {loading ? 'Generando...' : 'Descargar Reporte PDF'}
+            </Button>
+          </div>
+          
+          <div ref={statsRef} className="bg-white p-6 md:p-10 rounded-3xl shadow-xl border border-gray-100 space-y-10">
+            {/* ENCABEZADO DEL REPORTE */}
+            <div className="flex justify-between items-start border-b-2 border-blue-50 pb-8">
+              <div>
+                <h2 className="text-3xl font-black text-[#2A5C82] tracking-tighter uppercase mb-1">Informe de Desempeño</h2>
+                <p className="text-gray-500 font-bold tracking-widest text-xs uppercase">Periodo Lectivo 2026 - LectoTech</p>
               </div>
-              
-              <div ref={statsRef} className="space-y-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {[
-                    { label: 'Estudiantes', val: estudiantes.length, icon: '👥', color: 'bg-blue-500' },
-                    { label: 'Libros', val: librosAsignados.length, icon: '📚', color: 'bg-green-500' },
-                    { label: 'Efectividad', val: '100%', icon: '⭐', color: 'bg-yellow-500' },
-                    { label: 'Mensajes', val: '0', icon: '📩', color: 'bg-orange-500' }
-                  ].map((s, idx) => (
-                    <Card key={idx} className="border-none shadow-xl overflow-hidden hover:scale-105 transition-transform">
-                      <div className={`h-2 ${s.color}`} />
-                      <CardContent className="p-6 flex items-center justify-between">
-                        <div>
-                          <p className="text-gray-500 font-bold text-sm uppercase tracking-wider">{s.label}</p>
-                          <p className="text-3xl font-black mt-1 text-gray-800">{s.val}</p>
-                        </div>
-                        <div className={`text-4xl ${s.color.replace('bg-', 'text-')} bg-opacity-10 p-3 rounded-2xl`}>{s.icon}</div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+              <div className="text-right">
+                <p className="font-black text-gray-800">{perfil.nombre}</p>
+                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Docente de Lengua y Literatura</p>
+              </div>
+            </div>
 
-                <Card className="shadow-2xl border-none p-6 md:p-10 text-center bg-white">
-                  <div className="max-w-md mx-auto">
-                    <span className="text-6xl block mb-6">🚀</span>
-                    <h3 className="text-2xl font-bold text-[#2A5C82] mb-2">¡Todo bajo control!</h3>
-                    <p className="text-gray-500 leading-relaxed">
-                      Este panel te permite monitorear el progreso de tus clases en tiempo real. 
-                      Pronto añadiremos más gráficas interactivas.
-                    </p>
+            {/* CARDS RESUMEN */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                { label: 'Estudiantes', val: estudiantes.length, icon: '👥', color: 'bg-blue-500', text: 'text-blue-500' },
+                { label: 'Biblioteca', val: librosAsignados.length, icon: '📚', color: 'bg-green-500', text: 'text-green-500' },
+                { label: 'Efectividad', val: '100%', icon: '⭐', color: 'bg-yellow-500', text: 'text-yellow-600' },
+                { label: 'Mensajes', val: mensajesEnviados.length, icon: '📩', color: 'bg-orange-500', text: 'text-orange-500' }
+              ].map((s, idx) => (
+                <div key={idx} className="bg-gray-50 p-6 rounded-3xl border-2 border-white shadow-sm flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-400 font-black text-[10px] uppercase tracking-widest">{s.label}</p>
+                    <p className={`text-3xl font-black ${s.text}`}>{s.val}</p>
                   </div>
-                </Card>
+                  <span className="text-3xl opacity-50">{s.icon}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* DESGLOSE POR GRADO */}
+            <div className="space-y-6">
+              <h3 className="text-xl font-black text-gray-800 flex items-center gap-2">
+                <span className="w-2 h-6 bg-[#2A5C82] rounded-full"></span>
+                Distribución por Grados
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {clases.map(clase => {
+                  const numEst = estudiantes.filter(e => e.clase === clase.codigo).length;
+                  const porcentaje = estudiantes.length > 0 ? (numEst / estudiantes.length) * 100 : 0;
+                  return (
+                    <div key={clase.id} className="p-6 bg-white border-2 border-gray-50 rounded-3xl shadow-sm">
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-2xl">{clase.icon}</span>
+                        <span className="font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-full text-xs">{clase.codigo}</span>
+                      </div>
+                      <p className="font-bold text-gray-800">{clase.nombre}</p>
+                      <div className="mt-4 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${porcentaje}%` }}></div>
+                      </div>
+                      <p className="mt-2 text-sm font-black text-gray-400">{numEst} Estudiantes</p>
+                    </div>
+                  );
+                })}
               </div>
+            </div>
+
+            {/* TABLA DE ESTUDIANTES */}
+            <div className="space-y-6">
+              <h3 className="text-xl font-black text-gray-800 flex items-center gap-2">
+                <span className="w-2 h-6 bg-[#4CAF50] rounded-full"></span>
+                Nómina de Estudiantes Registrados
+              </h3>
+              <div className="border-2 border-gray-50 rounded-3xl overflow-hidden">
+                <table className="w-full text-left">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="p-4 font-black text-gray-500 text-xs uppercase tracking-widest">Estudiante</th>
+                      <th className="p-4 font-black text-gray-500 text-xs uppercase tracking-widest">Clase</th>
+                      <th className="p-4 font-black text-gray-500 text-xs uppercase tracking-widest">Correo</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {estudiantes.length === 0 ? (
+                      <tr><td colSpan={3} className="p-8 text-center text-gray-400 font-bold italic">No hay estudiantes matriculados todavía.</td></tr>
+                    ) : (
+                      estudiantes.slice(0, 15).map(est => (
+                        <tr key={est.id} className="hover:bg-blue-50/30 transition-colors">
+                          <td className="p-4 font-bold text-gray-800">{est.full_name}</td>
+                          <td className="p-4"><span className="bg-gray-100 px-3 py-1 rounded-full text-xs font-black text-gray-500">{est.clase || 'S/A'}</span></td>
+                          <td className="p-4 text-xs text-gray-400 font-medium">{est.email}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+                {estudiantes.length > 15 && <p className="p-4 bg-gray-50 text-center text-xs font-bold text-gray-400 italic">Y {estudiantes.length - 15} estudiantes más...</p>}
+              </div>
+            </div>
+          </div>
             </div>
           )}
 
