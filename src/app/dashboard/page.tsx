@@ -368,9 +368,9 @@ export default function DashboardPage() {
 
   return (
     <div className="flex h-screen bg-[#F0F4F8] overflow-hidden">
-      <aside className="w-20 md:w-72 bg-[#2A5C82] flex flex-col p-4 shadow-2xl z-20 flex-shrink-0">
+      <aside className="w-20 md:w-72 bg-[#2A5C82] flex flex-col p-4 shadow-2xl z-20 flex-shrink-0 overflow-x-hidden">
         <h2 className="text-2xl font-bold mb-8 text-center hidden md:block text-white">Lecto<span className="text-[#FFD700]">Tech</span></h2>
-        <nav className="flex flex-col gap-2 flex-grow overflow-y-auto">
+        <nav className="flex flex-col gap-2 flex-grow overflow-y-auto overflow-x-hidden scrollbar-hide">
           <SidebarButton id="perfil" icon="👤" label="Mi Perfil" />
           <SidebarButton id="muro" icon="📢" label="Muro Clase" />
           <SidebarButton id="retos" icon="🏆" label="Retos" />
