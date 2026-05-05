@@ -34,43 +34,85 @@ const PerfilView = ({ estudianteInfo, handleAvatarUpload, loading }: any) => (
 
 const RetosView = ({ estudianteInfo, router }: any) => {
   const niveles = [
-    { id: 1, tipo: 'lectura', titulo: 'El Misterio del Volcán', icono: '🌋', color: 'bg-[#FFD700]', ruta: `/lectura/el-misterio?grado=${estudianteInfo.grado}`, completado: true },
-    { id: 2, tipo: 'juego', titulo: 'Adivina la Palabra', icono: '🤔', color: 'bg-[#FF8C00]', ruta: `/juegos/adivina?grado=${estudianteInfo.grado}`, completado: true },
-    { id: 3, tipo: 'lectura', titulo: 'El Bosque Encantado', icono: '🌲', color: 'bg-[#4CAF50]', ruta: `/biblioteca`, completado: true, actual: false },
-    { id: 4, tipo: 'juego', titulo: 'Cazador de Verbos', icono: '🏃‍♂️', color: 'bg-[#2A5C82]', ruta: `/juegos/verbos?grado=${estudianteInfo.grado}`, completado: false, bloqueado: false },
-    { id: 5, tipo: 'juego', titulo: 'Sopa de Letras', icono: '🔍', color: 'bg-[#E91E63]', ruta: `/juegos/sopa?grado=${estudianteInfo.grado}`, completado: false, bloqueado: false, actual: true },
-    { id: 6, tipo: 'juego', titulo: 'Parejas de Sinónimos', icono: '🃏', color: 'bg-[#9C27B0]', ruta: `/juegos/parejas?grado=${estudianteInfo.grado}`, completado: false, bloqueado: false },
-    { id: 7, tipo: 'taller', titulo: 'Taller de Escritura', icono: '✍️', color: 'bg-[#FF5722]', ruta: `/taller`, completado: false, bloqueado: false },
+    { id: 1, tipo: 'lectura', titulo: 'El Misterio del Volcán', icono: '🌋', color: 'from-orange-400 to-red-500', ruta: `/lectura/el-misterio?grado=${estudianteInfo.grado}` },
+    { id: 2, tipo: 'juego', titulo: 'Adivina la Palabra', icono: '🤔', color: 'from-yellow-400 to-orange-500', ruta: `/juegos/adivina?grado=${estudianteInfo.grado}` },
+    { id: 3, tipo: 'lectura', titulo: 'El Bosque Encantado', icono: '🌲', color: 'from-green-400 to-emerald-600', ruta: `/biblioteca` },
+    { id: 4, tipo: 'juego', titulo: 'Cazador de Verbos', icono: '🏃‍♂️', color: 'from-blue-400 to-indigo-600', ruta: `/juegos/verbos?grado=${estudianteInfo.grado}` },
+    { id: 5, tipo: 'juego', titulo: 'Sopa de Letras', icono: '🔍', color: 'from-pink-400 to-rose-600', ruta: `/juegos/sopa?grado=${estudianteInfo.grado}` },
+    { id: 6, tipo: 'juego', titulo: 'Parejas de Sinónimos', icono: '🃏', color: 'from-purple-400 to-fuchsia-600', ruta: `/juegos/parejas?grado=${estudianteInfo.grado}` },
+    { id: 7, tipo: 'taller', titulo: 'Taller de Escritura', icono: '✍️', color: 'from-cyan-400 to-blue-500', ruta: `/taller` },
   ];
 
   return (
-    <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <h2 className="text-2xl font-bold text-[#2A5C82] mb-8 text-center">Tu Mapa de Retos</h2>
-      <div className="relative flex flex-col items-center gap-8 py-8">
-        <div className="absolute top-0 bottom-0 w-4 bg-gray-200 rounded-full z-0" style={{ left: 'calc(50% - 8px)' }}></div>
-        <div className="absolute top-0 w-4 bg-[#FFD700] rounded-full z-0 transition-all duration-1000" style={{ left: 'calc(50% - 8px)', height: '40%' }}></div>
-
-        {niveles.map((nivel, index) => {
-          const offset = index % 2 === 0 ? '-translate-x-12' : 'translate-x-12';
-          return (
-            <div key={nivel.id} className={`relative z-10 flex flex-col items-center ${offset} transition-transform hover:scale-105 group`}>
-              <div className="absolute -top-12 bg-gray-900 px-4 py-2 rounded-xl shadow-lg border-none whitespace-nowrap text-sm font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                {nivel.titulo} {nivel.bloqueado && " 🔒"}
-              </div>
-              <button 
-                onClick={() => !nivel.bloqueado && router.push(nivel.ruta)}
-                className={`w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-3xl md:text-4xl shadow-xl border-b-8 active:border-b-0 active:translate-y-2 transition-all
-                  ${nivel.color} 
-                  ${nivel.bloqueado ? 'border-gray-400 bg-gray-200 grayscale contrast-125 cursor-not-allowed' : 
-                    nivel.completado ? 'border-yellow-600' : 'border-green-700 ring-4 ring-green-300 animate-pulse'}
-                `}
-              >
-                {nivel.icono}
-              </button>
-            </div>
-          );
-        })}
+    <div className="bg-gradient-to-b from-blue-50 to-white rounded-[3rem] p-4 md:p-12 shadow-xl border-4 border-white animate-in fade-in zoom-in duration-700 relative overflow-hidden min-h-[800px]">
+      {/* Fondo Decorativo */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="absolute top-10 left-10 text-6xl">☁️</div>
+        <div className="absolute top-40 right-20 text-6xl">☁️</div>
+        <div className="absolute bottom-20 left-1/4 text-6xl text-green-200">🌳</div>
+        <div className="absolute top-1/2 right-1/4 text-6xl text-yellow-100">☀️</div>
       </div>
+
+      <div className="relative z-10">
+        <h2 className="text-4xl font-black text-[#2A5C82] mb-16 text-center tracking-tight">🗺️ ¡Elige tu Próximo Reto!</h2>
+        
+        <div className="relative flex flex-col items-center gap-24 py-12">
+          {/* Línea de Camino Dinámica */}
+          <svg className="absolute top-0 w-full h-full pointer-events-none overflow-visible" viewBox="0 0 1000 1200" preserveAspectRatio="none">
+             <path 
+               d="M 500 0 C 800 150, 200 150, 500 300 C 800 450, 200 450, 500 600 C 800 750, 200 750, 500 900 C 800 1050, 200 1050, 500 1200" 
+               fill="none" 
+               stroke="#FFD700" 
+               strokeWidth="15" 
+               strokeLinecap="round" 
+               strokeDasharray="25 25"
+               className="animate-[dash_30s_linear_infinite] opacity-60"
+             />
+          </svg>
+
+          {niveles.map((nivel, index) => {
+            // Alternar posiciones: Izquierda, Centro, Derecha, Centro...
+            const positions = [
+              'md:-translate-x-[250px]', // Izquierda
+              'md:translate-x-[0px]',    // Centro
+              'md:translate-x-[250px]',  // Derecha
+              'md:translate-x-[0px]'     // Centro
+            ];
+            const xOffset = positions[index % positions.length];
+            
+            return (
+              <div key={nivel.id} className={`relative flex flex-col items-center ${xOffset} transition-all duration-700`}>
+                <div className="absolute -top-14 bg-white px-4 py-2 rounded-2xl shadow-lg border-2 border-yellow-100 whitespace-nowrap text-sm font-black text-[#2A5C82] opacity-0 group-hover:opacity-100 transition-opacity z-20 pointer-events-none scale-0 group-hover:scale-100 transform origin-bottom">
+                  {nivel.titulo}
+                </div>
+                
+                <button 
+                  onClick={() => router.push(nivel.ruta)}
+                  className={`group relative w-24 h-24 md:w-32 md:h-32 rounded-[2.5rem] bg-gradient-to-br ${nivel.color} p-1 shadow-[0_15px_0_0_rgba(0,0,0,0.1)] active:shadow-none active:translate-y-2 transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95`}
+                >
+                  <div className="w-full h-full bg-white/20 rounded-[2rem] flex items-center justify-center text-4xl md:text-5xl backdrop-blur-sm border-2 border-white/50">
+                    <span className="group-hover:animate-bounce drop-shadow-lg">{nivel.icono}</span>
+                  </div>
+                  
+                  {/* Destello de animación */}
+                  <div className="absolute -inset-1 bg-white/40 rounded-[2.5rem] blur opacity-0 group-hover:opacity-100 transition-opacity animate-pulse"></div>
+                  
+                  {/* Etiqueta de Título siempre visible en móvil */}
+                  <div className="absolute top-full mt-4 bg-[#2A5C82] text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter shadow-md whitespace-nowrap">
+                    {nivel.titulo}
+                  </div>
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes dash {
+          to { stroke-dashoffset: -1000; }
+        }
+      `}</style>
     </div>
   );
 };
@@ -126,137 +168,286 @@ const BibliotecaView = ({ libros, setSelectedBook }: any) => (
   </div>
 );
 
-const GuiaView = () => (
-  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
-    <h2 className="text-2xl font-bold text-[#2A5C82]">Guía de la Plataforma</h2>
-    <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-      <h3 className="text-xl font-bold text-gray-800 mb-4">¿Cómo funciona LectoTech?</h3>
-      <p className="text-gray-600">Completa retos para ganar estrellas y desbloquear nuevos niveles. Tu profesor puede asignarte libros especiales en la sección de Biblioteca.</p>
+const GuiaView = () => {
+  const pasos = [
+    { titulo: '🎨 Tu Avatar', desc: '¡Ponle tu estilo! Sube una foto en "Mi Perfil" para que todos te reconozcan.', icon: '📸', color: 'bg-orange-100 text-orange-600' },
+    { titulo: '📢 El Muro', desc: 'Aquí el profesor publica noticias para toda la clase. ¡No te pierdas de nada!', icon: '🗣️', color: 'bg-blue-100 text-blue-600' },
+    { titulo: '✉️ Mensajes', desc: '¿Recibiste un mensaje privado? Aquí verás lecturas especiales y videos solo para ti.', icon: '📬', color: 'bg-purple-100 text-purple-600' },
+    { titulo: '🏆 Los Retos', desc: 'Supera niveles, gana estrellas y desbloquea juegos secretos.', icon: '🌟', color: 'bg-yellow-100 text-yellow-600' },
+    { titulo: '📚 La Biblioteca', desc: '¡Tu rincón de lectura! Aquí están los libros PDF que tu profe te asigna.', icon: '📖', color: 'bg-green-100 text-green-600' },
+    { titulo: '📦 Archivados', desc: '¿Mensajes viejos? Dale a "Ocultar" para limpiar tu muro y guárdalos en el baúl.', icon: '🗃️', color: 'bg-gray-100 text-gray-600' },
+  ];
+
+  return (
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-10 pb-12">
+      <div className="text-center space-y-2">
+        <h2 className="text-4xl font-black text-[#2A5C82] tracking-tight">🗺️ Guía del Explorador</h2>
+        <p className="text-gray-500 font-bold">Aprende a dominar el mundo de LectoTech en segundos</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {pasos.map((p, i) => (
+          <div key={i} className="bg-white p-8 rounded-[2rem] shadow-sm border-2 border-gray-50 hover:border-[#4CAF50] transition-all hover:shadow-xl group">
+            <div className={`w-16 h-16 ${p.color} rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-inner group-hover:scale-110 transition-transform`}>
+              {p.icon}
+            </div>
+            <h3 className="text-xl font-black text-gray-800 mb-3">{p.titulo}</h3>
+            <p className="text-gray-500 text-sm leading-relaxed font-medium">{p.desc}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-blue-600 rounded-[2.5rem] p-10 text-white flex flex-col md:flex-row items-center gap-8 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+        <div className="text-6xl animate-pulse">💡</div>
+        <div className="space-y-2">
+          <h3 className="text-2xl font-black">¿Sabías que...?</h3>
+          <p className="text-blue-100 max-w-xl">
+            Cada vez que el profesor te envía un PDF por mensaje, puedes abrirlo en el <strong>Visor Interactivo</strong> para leerlo como si fuera un libro real. ¡Busca el botón con el libro! 📖
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const QuienesSomosView = () => (
+  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8 pb-12">
+    {/* Encabezado Principal */}
+    <div className="bg-gradient-to-br from-[#2A5C82] to-[#1A3A52] text-white rounded-3xl p-10 shadow-2xl text-center relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+      <div className="absolute bottom-0 left-0 w-24 h-24 bg-yellow-400/20 rounded-full -ml-12 -mb-12 blur-xl"></div>
+      
+      <span className="text-6xl mb-4 block animate-bounce">🚀</span>
+      <h2 className="text-4xl font-black text-[#FFD700] mb-4 tracking-tight">¡Bienvenidos a la Aventura LectoTech!</h2>
+      <p className="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed font-medium">
+        Donde la tecnología y la imaginación se unen para crear a los mejores lectores del mundo.
+      </p>
+    </div>
+
+    {/* Sección del Proyecto Científico */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-4">
+        <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl shadow-inner">🎓</div>
+        <h3 className="text-2xl font-black text-[#2A5C82]">Nuestro Origen</h3>
+        <p className="text-gray-600 leading-relaxed">
+          Este proyecto nace de una investigación científica en la Universidad de Guayaquil, diseñada específicamente para estudiantes de 5to, 6to y 7mo de básica.
+          <br/><br/>
+          Nuestro objetivo es demostrar que con las herramientas digitales correctas, ¡aprender a leer y escribir es un juego de niños!
+        </p>
+      </div>
+
+      <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-4">
+        <div className="w-16 h-16 bg-yellow-50 text-yellow-600 rounded-2xl flex items-center justify-center text-3xl shadow-inner">💡</div>
+        <h3 className="text-2xl font-black text-[#2A5C82]">¿Por qué LectoTech?</h3>
+        <p className="text-gray-600 leading-relaxed">
+          Descubrimos que cuando usas tablets y computadoras, tu motivación vuela por los cielos. 🚀
+          <br/><br/>
+          Aunque a veces es difícil conseguir estos equipos, sabemos que cuando los tienes, ¡tu rendimiento en lectura y redacción mejora muchísimo!
+        </p>
+      </div>
+    </div>
+
+    {/* Las Creadoras */}
+    <div className="bg-white p-10 rounded-3xl shadow-sm border border-gray-100">
+      <h3 className="text-2xl font-black text-[#2A5C82] mb-8 text-center flex items-center justify-center gap-3">
+        <span className="text-3xl">👩‍🔬</span> Las Mentes Detrás del Proyecto
+      </h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
+        <div className="flex flex-col items-center text-center p-6 bg-blue-50/50 rounded-2xl border-2 border-dashed border-blue-100">
+          <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center text-4xl mb-4 shadow-md">👤</div>
+          <p className="text-xl font-black text-[#2A5C82]">Lcda. Karelis Hernández Jiménez</p>
+          <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">Universidad de Guayaquil</p>
+          <p className="text-xs text-blue-600 mt-2 font-medium">Karelis.hernandezj@ug.edu.ec</p>
+        </div>
+        <div className="flex flex-col items-center text-center p-6 bg-green-50/50 rounded-2xl border-2 border-dashed border-green-100">
+          <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center text-4xl mb-4 shadow-md">👤</div>
+          <p className="text-xl font-black text-[#2A5C82]">Lcda. Jessica Silva Mero</p>
+          <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">Universidad de Guayaquil</p>
+          <p className="text-xs text-green-600 mt-2 font-medium">Silvajess.2808@gmail.com</p>
+        </div>
+      </div>
+    </div>
+
+    {/* Footer de la Sección */}
+    <div className="text-center p-8 bg-yellow-400 rounded-3xl shadow-xl">
+      <p className="text-white font-black text-lg">
+        "La tecnología potencia tu motivación y producción escrita. ¡Sigamos explorando juntos!" ✨
+      </p>
     </div>
   </div>
 );
 
-const QuienesSomosView = () => (
-  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 bg-gradient-to-br from-[#2A5C82] to-[#1a3a53] text-white rounded-3xl p-8 shadow-xl text-center">
-    <h2 className="text-3xl font-bold text-[#FFD700] mb-4">¿Quiénes Somos?</h2>
-    <p className="text-lg text-blue-100 max-w-2xl mx-auto leading-relaxed">
-      En LectoTech, transformamos la lectura en una aventura épica usando neuroeducación y tecnología.
-    </p>
-  </div>
-);
-
-const MuroView = ({ mensajes, onStar, onComment, currentUserId }: { mensajes: any[], onStar: (id: string) => void, onComment: (id: string, content: string) => void, currentUserId: string }) => {
+const MuroView = ({ mensajes, onStar, onComment, onArchive, currentUserId, setSelectedBook }: { mensajes: any[], onStar: (id: string) => void, onComment: (id: string, content: string) => void, onArchive: (id: string) => void, currentUserId: string, setSelectedBook: any }) => {
+  const [showArchived, setShowArchived] = useState(false);
   const [commentInputs, setCommentInputs] = useState<{[key: string]: string}>({});
+
+  const mensajesFiltrados = mensajes.filter(m => m.target_type === 'class');
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-[#2A5C82]">📢 Muro de la Clase</h2>
-        <span className="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest">Avisos del Profesor</span>
+        <button 
+          onClick={() => setShowArchived(!showArchived)}
+          className="text-xs font-black uppercase text-gray-400 hover:text-[#2A5C82] transition-colors"
+        >
+          {showArchived ? '📁 Ver Recientes' : '📦 Ver Archivados'}
+        </button>
       </div>
 
-      {mensajes.length === 0 ? (
+      {mensajesFiltrados.length === 0 ? (
         <div className="bg-white rounded-3xl p-12 shadow-sm border border-gray-100 text-center">
-          <div className="text-6xl mb-6">📭</div>
-          <p className="text-gray-400 font-bold text-lg">No hay mensajes nuevos en el muro por ahora.</p>
+          <p className="text-gray-400 font-bold">No hay mensajes de la clase.</p>
         </div>
       ) : (
-        <div className="space-y-6">
-          {mensajes.map((msg) => {
-            const hasStarred = msg.message_stars?.some((s: any) => s.user_id === currentUserId);
-            return (
-              <div key={msg.id} className={`p-6 md:p-8 rounded-3xl shadow-sm border-2 transition-all ${msg.target_type === 'student' ? 'bg-purple-50 border-purple-100' : 'bg-white border-gray-50'}`}>
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#2A5C82] rounded-xl flex items-center justify-center text-xl">👨‍🏫</div>
-                    <div>
-                      <p className="font-black text-[#2A5C82]">Mensaje del Profesor</p>
-                      <p className="text-xs text-gray-400 font-bold">{new Date(msg.created_at).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  {msg.target_type === 'student' && (
-                    <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Privado para ti</span>
-                  )}
-                </div>
-                
-                <p className="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                
-                {msg.media_url && (
-                  <div className="mt-6 rounded-2xl overflow-hidden border border-gray-100 shadow-sm group">
-                    {msg.media_type === 'image' ? (
-                      <img src={msg.media_url} alt="Adjunto" className="w-full max-h-96 object-cover" />
-                    ) : (
-                      <button 
-                        onClick={() => setSelectedBook({
-                          title: 'Lectura del Profesor',
-                          pdf_url: msg.media_url
-                        })}
-                        className="w-full flex items-center justify-between p-5 bg-blue-50 hover:bg-blue-100 transition-all group"
-                      >
-                        <div className="flex items-center gap-4 text-left">
-                          <span className="text-3xl">📖</span>
-                          <div>
-                            <p className="font-black text-[#2A5C82] group-hover:underline">Abrir Lectura Interactiva</p>
-                            <p className="text-xs text-gray-400 font-bold tracking-widest uppercase">Haz clic para leer el libro</p>
-                          </div>
-                        </div>
-                        <span className="bg-white p-2 rounded-xl shadow-sm group-hover:translate-x-1 transition-transform">➡️</span>
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {/* INTERACCIONES */}
-                <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col gap-6">
-                  <div className="flex items-center gap-6">
-                    <button 
-                      onClick={() => onStar(msg.id)}
-                      className={`flex items-center gap-2 font-bold transition-all px-4 py-2 rounded-full ${hasStarred ? 'bg-yellow-100 text-yellow-600 scale-110' : 'bg-gray-50 text-gray-400 hover:bg-yellow-50'}`}
-                    >
-                      <span className="text-xl">⭐</span>
-                      <span>{msg.message_stars?.length || 0}</span>
-                    </button>
-                    <div className="flex items-center gap-2 text-gray-400 font-bold">
-                      <span className="text-xl">💬</span>
-                      <span>{msg.message_comments?.length || 0} comentarios</span>
-                    </div>
-                  </div>
-
-                  {/* LISTA DE COMENTARIOS */}
-                  <div className="space-y-3">
-                    {msg.message_comments?.map((comment: any) => (
-                      <div key={comment.id} className="bg-gray-50 p-4 rounded-2xl">
-                        <p className="text-xs font-black text-[#2A5C82] mb-1">{comment.user_name}</p>
-                        <p className="text-gray-700 text-sm">{comment.content}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* INPUT DE COMENTARIO */}
-                  <div className="flex gap-2">
-                    <input 
-                      type="text"
-                      value={commentInputs[msg.id] || ''}
-                      onChange={(e) => setCommentInputs({...commentInputs, [msg.id]: e.target.value})}
-                      placeholder="Escribe un comentario..."
-                      className="flex-1 bg-gray-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-100 outline-none"
-                    />
-                    <button 
-                      onClick={() => {
-                        onComment(msg.id, commentInputs[msg.id]);
-                        setCommentInputs({...commentInputs, [msg.id]: ''});
-                      }}
-                      className="bg-[#2A5C82] text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors"
-                    >
-                      Enviar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        <div className="grid grid-cols-1 gap-6">
+          {mensajesFiltrados.map((msg) => (
+             <MensajeCard 
+               key={msg.id} msg={msg} onStar={onStar} onComment={onComment} 
+               onArchive={onArchive} currentUserId={currentUserId} setSelectedBook={setSelectedBook}
+             />
+          ))}
         </div>
       )}
+    </div>
+  );
+};
+
+const MensajesView = ({ mensajes, onStar, onComment, onArchive, currentUserId, setSelectedBook }: any) => {
+  const mensajesPrivados = mensajes.filter(m => m.target_type === 'student');
+
+  return (
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
+      <h2 className="text-2xl font-bold text-[#2A5C82]">✉️ Mis Mensajes Privados</h2>
+      {mensajesPrivados.length === 0 ? (
+        <div className="bg-white rounded-3xl p-12 shadow-sm border border-gray-100 text-center">
+          <p className="text-gray-400 font-bold">No tienes mensajes directos del profesor.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6">
+          {mensajesPrivados.map((msg: any) => (
+             <MensajeCard 
+               key={msg.id} msg={msg} onStar={onStar} onComment={onComment} 
+               onArchive={onArchive} currentUserId={currentUserId} setSelectedBook={setSelectedBook}
+             />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const MensajeCard = ({ msg, onStar, onComment, onArchive, currentUserId, setSelectedBook }: any) => {
+  const [commentInput, setCommentInput] = useState('');
+  const hasStarred = msg.message_stars?.some((s: any) => s.user_id === currentUserId);
+
+  return (
+    <div className={`p-6 md:p-8 rounded-3xl shadow-sm border-2 transition-all ${msg.target_type === 'student' ? 'bg-purple-50 border-purple-100' : 'bg-white border-gray-100'}`}>
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-[#2A5C82] rounded-xl flex items-center justify-center text-xl">👨‍🏫</div>
+          <div>
+            <p className="font-black text-[#2A5C82]">Mensaje del Profesor</p>
+            <p className="text-xs text-gray-400 font-bold">{new Date(msg.created_at).toLocaleString()}</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          {msg.target_type === 'student' && (
+            <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Privado</span>
+          )}
+          <button 
+            onClick={() => onArchive(msg.id)}
+            className="bg-gray-100 hover:bg-orange-50 text-gray-400 hover:text-orange-600 px-3 py-1 rounded-full text-[10px] font-black uppercase transition-all"
+          >
+            Ocultar
+          </button>
+        </div>
+      </div>
+      
+      <p className="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+      
+      {msg.youtube_url && (
+        <div className="mt-6 rounded-2xl overflow-hidden shadow-xl aspect-video border-4 border-white">
+          <iframe 
+            src={`https://www.youtube.com/embed/${msg.youtube_url.split('v=')[1]?.split('&')[0] || msg.youtube_url.split('/').pop()}`}
+            className="w-full h-full"
+            allowFullScreen
+          />
+        </div>
+      )}
+
+      {msg.media_url && (
+        <div className="mt-6 rounded-2xl overflow-hidden border border-gray-100 shadow-sm group">
+          {msg.media_type === 'image' ? (
+            <img src={msg.media_url} alt="Adjunto" className="w-full max-h-96 object-cover" />
+          ) : (
+            <button 
+              onClick={() => setSelectedBook({
+                title: 'Lectura del Profesor',
+                pdf_url: msg.media_url
+              })}
+              className="w-full flex items-center justify-between p-5 bg-blue-50 hover:bg-blue-100 transition-all group"
+            >
+              <div className="flex items-center gap-4 text-left">
+                <span className="text-3xl">📖</span>
+                <div>
+                  <p className="font-black text-[#2A5C82] group-hover:underline">Abrir Lectura Interactiva</p>
+                  <p className="text-xs text-gray-400 font-bold tracking-widest uppercase">Haz clic para leer el libro</p>
+                </div>
+              </div>
+              <span className="bg-white p-2 rounded-xl shadow-sm group-hover:translate-x-1 transition-transform">➡️</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* INTERACCIONES */}
+      <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col gap-6">
+        <div className="flex items-center gap-6">
+          <button 
+            onClick={() => onStar(msg.id)}
+            className={`flex items-center gap-2 font-bold transition-all px-4 py-2 rounded-full ${hasStarred ? 'bg-yellow-100 text-yellow-600 scale-110' : 'bg-gray-50 text-gray-400 hover:bg-yellow-50'}`}
+          >
+            <span className="text-xl">⭐</span>
+            <span>{msg.message_stars?.length || 0}</span>
+          </button>
+          <div className="flex items-center gap-2 text-gray-400 font-bold">
+            <span className="text-xl">💬</span>
+            <span>{msg.message_comments?.length || 0} comentarios</span>
+          </div>
+        </div>
+
+        {/* LISTA DE COMENTARIOS */}
+        <div className="space-y-3">
+          {msg.message_comments?.map((comment: any) => (
+            <div key={comment.id} className="bg-gray-50 p-4 rounded-2xl">
+              <p className="text-xs font-black text-[#2A5C82] mb-1">{comment.user_name}</p>
+              <p className="text-gray-700 text-sm">{comment.content}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* INPUT DE COMENTARIO */}
+        <div className="flex gap-2">
+          <input 
+            type="text"
+            value={commentInput}
+            onChange={(e) => setCommentInput(e.target.value)}
+            placeholder="Escribe un comentario..."
+            className="flex-1 bg-gray-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-100 outline-none"
+          />
+          <button 
+            onClick={() => {
+              onComment(msg.id, commentInput);
+              setCommentInput('');
+            }}
+            className="bg-[#2A5C82] text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors"
+          >
+            Enviar
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
@@ -326,9 +517,18 @@ export default function DashboardPage() {
         message_stars(user_id),
         message_comments(*)
       `)
+      .eq('is_archived', false) // NO mostrar archivados
       .or(`and(target_type.eq.class,target_id.eq.${claseCode}),and(target_type.eq.student,target_id.eq.${userId})`)
       .order('created_at', { ascending: false });
     if (data) setMensajes(data as any);
+  };
+
+  const handleArchiveMessage = async (msgId: string) => {
+    // Para el estudiante, "archivar" es solo ocultar localmente.
+    // Como no queremos afectar a toda la clase, lo ideal sería una tabla intermedia,
+    // pero por ahora lo ocultaremos de la vista actual.
+    setMensajes(prev => prev.filter((m: any) => m.id !== msgId));
+    alert("Mensaje ocultado de tu muro.");
   };
 
   const handleAddStar = async (msgId: string) => {
@@ -387,11 +587,22 @@ export default function DashboardPage() {
 
   return (
     <div className="flex h-screen bg-[#F0F4F8] overflow-hidden">
-      <aside className="w-20 md:w-72 bg-[#2A5C82] flex flex-col p-4 shadow-2xl z-20 flex-shrink-0 overflow-x-hidden">
-        <h2 className="text-2xl font-bold mb-8 text-center hidden md:block text-white">Lecto<span className="text-[#FFD700]">Tech</span></h2>
+      <aside className="w-20 md:w-72 bg-[#2A5C82] flex flex-col p-4 shadow-2xl z-[60] flex-shrink-0 overflow-x-hidden">
+        {/* Logo de Estudiante */}
+        <div className="mb-10 flex flex-col items-center md:items-start px-2">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-3xl shadow-lg animate-pulse">👦</div>
+            <div className="hidden md:block">
+              <h2 className="text-xl font-black text-white leading-tight">Lecto<span className="text-[#FFD700]">Tech</span></h2>
+              <p className="text-[10px] font-bold text-blue-200 uppercase tracking-widest">Sistema Estudiante</p>
+            </div>
+          </div>
+        </div>
+
         <nav className="flex flex-col gap-2 flex-grow overflow-y-auto overflow-x-hidden scrollbar-hide">
           <SidebarButton id="perfil" icon="👤" label="Mi Perfil" />
           <SidebarButton id="muro" icon="📢" label="Muro Clase" />
+          <SidebarButton id="mensajes" icon="✉️" label="Mis Mensajes" />
           <SidebarButton id="retos" icon="🏆" label="Retos" />
           <SidebarButton id="juegos" icon="🎮" label="Juegos" />
           <SidebarButton id="biblioteca" icon="📚" label="Mi Biblioteca" />
@@ -412,20 +623,23 @@ export default function DashboardPage() {
         </nav>
       </aside>
 
-      <main className="flex-1 flex flex-col h-full relative overflow-y-auto">
-        <div className="sticky top-0 z-10 bg-[#F0F4F8]/80 backdrop-blur-md p-4 md:p-8 pb-4">
-          <header className="flex justify-between items-center bg-white p-4 px-6 rounded-2xl shadow-sm border border-gray-100">
-            <h1 className="text-xl md:text-2xl font-bold text-[#2A5C82]">¡Hola, {estudianteInfo.nombre}!</h1>
+      <main className="flex-1 flex flex-col h-full relative overflow-y-auto scroll-smooth">
+        {/* Encabezado Fijo con Z-Index Corregido */}
+        <div className="sticky top-0 z-50 bg-[#F0F4F8]/95 backdrop-blur-md p-4 md:p-8 pb-4">
+          <header className="flex justify-between items-center bg-white p-4 px-6 rounded-2xl shadow-md border border-gray-100">
+            <h1 className="text-xl md:text-2xl font-black text-[#2A5C82]">¡Hola, {estudianteInfo.nombre}!</h1>
             <div className="flex items-center gap-2 bg-yellow-50 px-4 py-2 rounded-xl border border-yellow-100">
-              <span className="text-2xl animate-pulse">🌟</span>
+              <span className="text-2xl animate-bounce">🌟</span>
               <span className="font-bold text-[#FFD700] text-xl">120</span>
             </div>
           </header>
         </div>
 
-        <div className="px-4 md:px-8 pb-12 pt-4 flex-1">
+        {/* Contenedor de contenido con padding superior para evitar solapamiento */}
+        <div className="px-4 md:px-8 pb-12 pt-6 flex-1 relative z-10">
           {activeTab === 'perfil' && <PerfilView estudianteInfo={estudianteInfo} handleAvatarUpload={handleAvatarUpload} loading={loading} />}
-          {activeTab === 'muro' && <MuroView mensajes={mensajes} onStar={handleAddStar} onComment={handleAddComment} currentUserId={estudianteInfo.id} />}
+          {activeTab === 'muro' && <MuroView mensajes={mensajes} onStar={handleAddStar} onComment={handleAddComment} onArchive={handleArchiveMessage} currentUserId={estudianteInfo.id} setSelectedBook={setSelectedBook} />}
+          {activeTab === 'mensajes' && <MensajesView mensajes={mensajes} onStar={handleAddStar} onComment={handleAddComment} onArchive={handleArchiveMessage} currentUserId={estudianteInfo.id} setSelectedBook={setSelectedBook} />}
           {activeTab === 'retos' && <RetosView estudianteInfo={estudianteInfo} router={router} />}
           {activeTab === 'juegos' && <JuegosView estudianteInfo={estudianteInfo} router={router} />}
           {activeTab === 'biblioteca' && <BibliotecaView libros={libros} setSelectedBook={setSelectedBook} />}

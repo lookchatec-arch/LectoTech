@@ -12,6 +12,7 @@ export default function ProfesorPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'panel' | 'clases' | 'actividades' | 'mensajes' | 'perfil'>('panel');
   const [selectedMessageForDetails, setSelectedMessageForDetails] = useState<any | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const statsRef = useRef<HTMLDivElement>(null);
@@ -21,6 +22,7 @@ export default function ProfesorPage() {
   const [msgTargetType, setMsgTargetType] = useState<'class' | 'student'>('class');
   const [msgTargetId, setMsgTargetId] = useState('');
   const [msgContent, setMsgContent] = useState('');
+  const [msgYoutube, setMsgYoutube] = useState('');
   const [msgFile, setMsgFile] = useState<File | null>(null);
   const [mensajesEnviados, setMensajesEnviados] = useState<any[]>([]);
   
@@ -42,7 +44,11 @@ export default function ProfesorPage() {
 
   useEffect(() => {
     fetchUserData();
-  }, [activeTab]); // Refrescar datos cada vez que se cambia de pestaña
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (perfil.id) fetchMensajes(perfil.id);
+  }, [showArchived]);
 
   const fetchUserData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -89,6 +95,7 @@ export default function ProfesorPage() {
         message_comments(*)
       `)
       .eq('sender_id', teacherId)
+      .eq('is_archived', showArchived) // Filtro dinámico
       .order('created_at', { ascending: false });
     if (data) setMensajesEnviados(data);
   };
@@ -126,7 +133,8 @@ export default function ProfesorPage() {
       target_id: msgTargetId,
       content: msgContent,
       media_url: mediaUrl,
-      media_type: mediaType
+      media_type: mediaType,
+      youtube_url: msgYoutube
     });
 
     if (error) {
@@ -134,6 +142,7 @@ export default function ProfesorPage() {
     } else {
       alert("¡Mensaje enviado con éxito!");
       setMsgContent('');
+      setMsgYoutube('');
       setMsgFile(null);
       fetchMensajes(perfil.id);
     }
@@ -173,10 +182,23 @@ export default function ProfesorPage() {
 
 
   const handleDeleteMessage = async (msgId: string) => {
-    if (!confirm("¿Seguro que quieres eliminar este mensaje?")) return;
+    if (!confirm("¿Seguro que quieres ELIMINAR este mensaje para todos?")) return;
     const { error } = await supabase.from('messages').delete().eq('id', msgId);
     if (error) alert("Error: " + error.message);
     else fetchMensajes(perfil.id);
+  };
+
+  const handleArchiveMessage = async (msgId: string) => {
+    const { error } = await supabase
+      .from('messages')
+      .update({ is_archived: true })
+      .eq('id', msgId);
+    
+    if (error) alert("Error: " + error.message);
+    else {
+      alert("Mensaje archivado (oculto de la lista principal).");
+      fetchMensajes(perfil.id);
+    }
   };
 
   const handleDeleteBook = async (bookId: string) => {
@@ -725,6 +747,17 @@ export default function ProfesorPage() {
                     </div>
 
                     <div>
+                      <label className="block text-sm font-black text-gray-700 mb-2 uppercase tracking-wider">Video de YouTube (Opcional)</label>
+                      <input 
+                        type="text" 
+                        value={msgYoutube}
+                        onChange={(e) => setMsgYoutube(e.target.value)}
+                        className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-red-500 outline-none"
+                        placeholder="Pega el link de YouTube aquí..."
+                      />
+                    </div>
+
+                    <div>
                       <label className="block text-sm font-black text-gray-700 mb-2 uppercase tracking-wider">Adjuntar (Imagen o PDF)</label>
                       <input 
                         type="file" 
@@ -742,17 +775,25 @@ export default function ProfesorPage() {
               </Card>
 
               <Card className="lg:col-span-2 shadow-xl border-none">
-                <CardHeader className="bg-gray-50 border-b border-gray-100 p-6">
-                  <h2 className="text-xl font-black text-gray-800">📋 Mensajes Recientes</h2>
+                <CardHeader className="bg-gray-50 border-b border-gray-100 p-6 flex flex-row justify-between items-center">
+                  <h2 className="text-xl font-black text-gray-800">
+                    {showArchived ? '📦 Mensajes Archivados' : '📋 Mensajes Enviados'}
+                  </h2>
+                  <button 
+                    onClick={() => setShowArchived(!showArchived)}
+                    className={`px-4 py-2 rounded-xl font-black text-xs transition-all ${showArchived ? 'bg-blue-600 text-white shadow-md' : 'bg-white border-2 border-gray-100 text-gray-400'}`}
+                  >
+                    {showArchived ? 'Ver Recientes' : 'Ver Archivados'}
+                  </button>
                 </CardHeader>
                 <CardContent className="p-6">
                   {mensajesEnviados.length === 0 ? (
                     <div className="text-center py-20 text-gray-300">
-                      <span className="text-8xl block mb-6">📭</span>
-                      <p className="text-lg font-bold">Aún no has enviado mensajes.</p>
+                      <span className="text-8xl block mb-6">{showArchived ? '📦' : '📭'}</span>
+                      <p className="text-lg font-bold">{showArchived ? 'No tienes mensajes archivados.' : 'Aún no has enviado mensajes.'}</p>
                     </div>
                   ) : (
-                    <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2">
+                    <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2 scrollbar-hide">
                       {mensajesEnviados.map(msg => (
                         <div key={msg.id} className="p-6 border-2 border-gray-50 rounded-3xl bg-white shadow-sm hover:border-blue-200 transition-all">
                           <div className="flex justify-between items-start mb-3">
@@ -766,11 +807,15 @@ export default function ProfesorPage() {
                             </div>
                             <div className="flex gap-2">
                               <button 
-                                onClick={() => alert("Función de archivado próximamente. Por ahora usa eliminar.")}
-                                className="bg-gray-100 hover:bg-orange-100 text-gray-400 hover:text-orange-600 p-2 rounded-xl transition-all text-xs font-bold"
-                                title="Archivar mensaje"
+                                onClick={async () => {
+                                  await supabase.from('messages').update({ is_archived: !showArchived }).eq('id', msg.id);
+                                  fetchMensajes(perfil.id);
+                                  alert(showArchived ? "Mensaje restaurado." : "Mensaje archivado.");
+                                }}
+                                className={`p-2 rounded-xl transition-all text-xs font-black uppercase ${showArchived ? 'bg-green-100 text-green-600 hover:bg-green-200' : 'bg-gray-100 text-gray-400 hover:bg-orange-100 hover:text-orange-600'}`}
+                                title={showArchived ? "Restaurar" : "Archivar"}
                               >
-                                📥 Ocultar
+                                {showArchived ? 'Restaurar' : 'Ocultar'}
                               </button>
                               <button onClick={() => handleDeleteMessage(msg.id)} className="bg-gray-100 hover:bg-red-500 hover:text-white p-2 rounded-xl transition-all" title="Eliminar mensaje">
                                 🗑️

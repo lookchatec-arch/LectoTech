@@ -17,21 +17,33 @@ export default function VerbosPage() {
   const [juegoTerminado, setJuegoTerminado] = useState(false);
 
   const bancoPalabras = [
-    { texto: 'Correr', esVerbo: true }, { texto: 'Mesa', esVerbo: false },
-    { texto: 'Saltar', esVerbo: true }, { texto: 'Lindo', esVerbo: false },
-    { texto: 'Escribir', esVerbo: true }, { texto: 'Casa', esVerbo: false },
-    { texto: 'Pensar', esVerbo: true }, { texto: 'Rojo', esVerbo: false },
-    { texto: 'Volar', esVerbo: true }, { texto: 'Rápido', esVerbo: false },
-    { texto: 'Comer', esVerbo: true }, { texto: 'Feliz', esVerbo: false },
-    { texto: 'Leer', esVerbo: true }, { texto: 'Gato', esVerbo: false },
-    { texto: 'Dormir', esVerbo: true }, { texto: 'Sol', esVerbo: false },
-    { texto: 'Jugar', esVerbo: true }, { texto: 'Alto', esVerbo: false },
-    { texto: 'Cantar', esVerbo: true }, { texto: 'Azul', esVerbo: false },
-    { texto: 'Reír', esVerbo: true }, { texto: 'Libro', esVerbo: false },
-    { texto: 'Llorar', esVerbo: true }, { texto: 'Pelota', esVerbo: false },
-    { texto: 'Bailar', esVerbo: true }, { texto: 'Árbol', esVerbo: false },
-    { texto: 'Pintar', esVerbo: true }, { texto: 'Reloj', esVerbo: false },
-    { texto: 'Mirar', esVerbo: true }, { texto: 'Cielo', esVerbo: false }
+    // VERBOS
+    { texto: 'Correr', esVerbo: true }, { texto: 'Saltar', esVerbo: true }, { texto: 'Escribir', esVerbo: true },
+    { texto: 'Pensar', esVerbo: true }, { texto: 'Volar', esVerbo: true }, { texto: 'Comer', esVerbo: true },
+    { texto: 'Leer', esVerbo: true }, { texto: 'Dormir', esVerbo: true }, { texto: 'Jugar', esVerbo: true },
+    { texto: 'Cantar', esVerbo: true }, { texto: 'Reír', esVerbo: true }, { texto: 'Llorar', esVerbo: true },
+    { texto: 'Bailar', esVerbo: true }, { texto: 'Pintar', esVerbo: true }, { texto: 'Mirar', esVerbo: true },
+    { texto: 'Soñar', esVerbo: true }, { texto: 'Nadar', esVerbo: true }, { texto: 'Escuchar', esVerbo: true },
+    { texto: 'Cocinar', esVerbo: true }, { texto: 'Viajar', esVerbo: true }, { texto: 'Gritar', esVerbo: true },
+    { texto: 'Hablar', esVerbo: true }, { texto: 'Estudiar', esVerbo: true }, { texto: 'Limpiar', esVerbo: true },
+    { texto: 'Comprar', esVerbo: true }, { texto: 'Vender', esVerbo: true }, { texto: 'Crear', esVerbo: true },
+    { texto: 'Destruir', esVerbo: true }, { texto: 'Subir', esVerbo: true }, { texto: 'Bajar', esVerbo: true },
+    { texto: 'Entrar', esVerbo: true }, { texto: 'Salir', esVerbo: true }, { texto: 'Abrir', esVerbo: true },
+    { texto: 'Cerrar', esVerbo: true }, { texto: 'Lanzar', esVerbo: true }, { texto: 'Atrapar', esVerbo: true },
+
+    // NO VERBOS (Sustantivos/Adjetivos)
+    { texto: 'Mesa', esVerbo: false }, { texto: 'Lindo', esVerbo: false }, { texto: 'Casa', esVerbo: false },
+    { texto: 'Rojo', esVerbo: false }, { texto: 'Rápido', esVerbo: false }, { texto: 'Feliz', esVerbo: false },
+    { texto: 'Gato', esVerbo: false }, { texto: 'Sol', esVerbo: false }, { texto: 'Alto', esVerbo: false },
+    { texto: 'Azul', esVerbo: false }, { texto: 'Libro', esVerbo: false }, { texto: 'Pelota', esVerbo: false },
+    { texto: 'Árbol', esVerbo: false }, { texto: 'Reloj', esVerbo: false }, { texto: 'Cielo', esVerbo: false },
+    { texto: 'Zapato', esVerbo: false }, { texto: 'Flor', esVerbo: false }, { texto: 'Perro', esVerbo: false },
+    { texto: 'Montaña', esVerbo: false }, { texto: 'Escuela', esVerbo: false }, { texto: 'Silla', esVerbo: false },
+    { texto: 'Ventana', esVerbo: false }, { texto: 'Puerta', esVerbo: false }, { texto: 'Lápiz', esVerbo: false },
+    { texto: 'Computadora', esVerbo: false }, { texto: 'Cuaderno', esVerbo: false }, { texto: 'Camino', esVerbo: false },
+    { texto: 'Pájaro', esVerbo: false }, { texto: 'Estrella', esVerbo: false }, { texto: 'Luna', esVerbo: false },
+    { texto: 'Nube', esVerbo: false }, { texto: 'Mar', esVerbo: false }, { texto: 'Arena', esVerbo: false },
+    { texto: 'Piedra', esVerbo: false }, { texto: 'Fruta', esVerbo: false }, { texto: 'Dulce', esVerbo: false }
   ];
 
   const iniciarJuego = () => {
@@ -43,12 +55,17 @@ export default function VerbosPage() {
   };
 
   const generarPalabras = () => {
-    // Escoger 12 palabras aleatorias para la cuadrícula
-    const seleccion = [...bancoPalabras].sort(() => 0.5 - Math.random()).slice(0, 12).map((p, i) => ({
-      id: i,
-      ...p,
-      estado: 'normal' as 'normal' | 'correcto' | 'incorrecto'
-    }));
+    // Escoger 6 verbos y 6 no-verbos aleatorios para equilibrar el juego
+    const verbos = bancoPalabras.filter(p => p.esVerbo).sort(() => 0.5 - Math.random()).slice(0, 6);
+    const noVerbos = bancoPalabras.filter(p => !p.esVerbo).sort(() => 0.5 - Math.random()).slice(0, 6);
+    
+    const seleccion = [...verbos, ...noVerbos]
+      .sort(() => 0.5 - Math.random())
+      .map((p, i) => ({
+        id: Math.random(), // ID único para forzar re-renderizado de animaciones
+        ...p,
+        estado: 'normal' as 'normal' | 'correcto' | 'incorrecto'
+      }));
     setPalabras(seleccion);
   };
 
