@@ -282,7 +282,7 @@ const MuroView = ({ mensajes, onStar, onComment, onArchive, currentUserId, setSe
   const [showArchived, setShowArchived] = useState(false);
   const [commentInputs, setCommentInputs] = useState<{[key: string]: string}>({});
 
-  const mensajesFiltrados = mensajes.filter(m => m.target_type === 'class');
+  const mensajesFiltrados = mensajes.filter((m: any) => m.target_type === 'class');
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
@@ -302,7 +302,7 @@ const MuroView = ({ mensajes, onStar, onComment, onArchive, currentUserId, setSe
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
-          {mensajesFiltrados.map((msg) => (
+          {mensajesFiltrados.map((msg: any) => (
              <MensajeCard 
                key={msg.id} msg={msg} onStar={onStar} onComment={onComment} 
                onArchive={onArchive} currentUserId={currentUserId} setSelectedBook={setSelectedBook}
@@ -315,7 +315,7 @@ const MuroView = ({ mensajes, onStar, onComment, onArchive, currentUserId, setSe
 };
 
 const MensajesView = ({ mensajes, onStar, onComment, onArchive, currentUserId, setSelectedBook }: any) => {
-  const mensajesPrivados = mensajes.filter(m => m.target_type === 'student');
+  const mensajesPrivados = mensajes.filter((m: any) => m.target_type === 'student');
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
