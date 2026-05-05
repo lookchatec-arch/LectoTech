@@ -220,49 +220,53 @@ export default function ProfesorPage() {
     setLoading(false);
   };
 
+  const handleChangeStudentClass = async (studentId: string, newClass: string) => {
+    if (!studentId) return;
+    setLoading(true);
+    const { error } = await supabase
+      .from('profiles')
+      .update({ clase: newClass })
+      .eq('id', studentId);
+    
+    if (error) {
+      alert("Error al guardar: " + error.message);
+    } else {
+      // Actualización local inmediata
+      setEstudiantes(prev => prev.map(est => est.id === studentId ? { ...est, clase: newClass } : est));
+      alert("¡Clase actualizada correctamente!");
+    }
+    setLoading(false);
+  };
+
   const exportarPDF = async () => {
     setLoading(true);
-    const element = statsRef.current;
+    const element = document.getElementById('pdf-content'); // Usamos ID directo
     if (!element) {
+      alert("No se encontró el contenido del reporte");
       setLoading(false);
       return;
     }
 
     try {
-      // Configuraciones para máxima compatibilidad
+      // Limpieza temporal de sombras para el PDF
       const canvas = await html2canvas(element, {
-        scale: 1.5, // Bajamos un poco la escala para evitar errores de memoria
+        scale: 1, // Escala 1:1 para evitar errores de memoria/bloqueo
         useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        logging: true,
-        onclone: (clonedDoc) => {
-          // Aseguramos que elementos ocultos no afecten
-          const el = clonedDoc.getElementById('pdf-content');
-          if (el) el.style.display = 'block';
-        }
+        allowTaint: false,
+        backgroundColor: "#ffffff"
       });
       
-      const imgData = canvas.toDataURL('image/jpeg', 0.8);
+      const imgData = canvas.toDataURL('image/jpeg', 0.7); // JPEG para menor peso
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       
-      // Encabezado decorativo
-      pdf.setFillColor(42, 92, 130);
-      pdf.rect(0, 0, pdfWidth, 15, 'F');
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(12);
-      pdf.text('REPORTE OFICIAL LECTOTECH', pdfWidth / 2, 10, { align: 'center' });
-      
-      pdf.addImage(imgData, 'JPEG', 0, 20, pdfWidth, pdfHeight);
-      
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
       pdf.save(`Reporte_LectoTech_${new Date().getTime()}.pdf`);
-      alert("¡Reporte generado con éxito!");
+      
     } catch (error) {
-      console.error("Error al generar PDF:", error);
-      alert("Error técnico al generar el PDF. Por favor, asegúrate de que no haya ventanas emergentes bloqueadas.");
+      console.error("Error PDF:", error);
+      alert("Error al generar el archivo. Por favor, intenta usar un navegador como Chrome o Edge.");
     }
     setLoading(false);
   };
@@ -357,7 +361,7 @@ export default function ProfesorPage() {
             </Button>
           </div>
           
-          <div ref={statsRef} className="bg-white p-6 md:p-10 rounded-3xl shadow-xl border border-gray-100 space-y-10">
+          <div id="pdf-content" ref={statsRef} className="bg-white p-6 md:p-10 rounded-3xl shadow-xl border border-gray-100 space-y-10">
             {/* ENCABEZADO DEL REPORTE */}
             <div className="flex justify-between items-start border-b-2 border-blue-50 pb-8">
               <div>
