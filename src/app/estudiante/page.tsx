@@ -19,6 +19,8 @@ export default function EstudianteLoginPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
+  const [isSuccess, setIsSuccess] = useState(false);
+
   const validatePassword = (pass: string) => {
     const hasUpper = /[A-Z]/.test(pass);
     const hasLower = /[a-z]/.test(pass);
@@ -78,10 +80,7 @@ export default function EstudianteLoginPage() {
         if (data.user?.identities?.length === 0) {
            setErrorMsg("Este correo ya está registrado.");
         } else {
-           setSuccessMsg("¡Registro exitoso! Ya puedes iniciar sesión.");
-           setAuthMode('login');
-           setPassword('');
-           setConfirmPassword('');
+           setIsSuccess(true);
         }
 
       } else {
@@ -104,6 +103,28 @@ export default function EstudianteLoginPage() {
       setLoading(false);
     }
   };
+
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen bg-[var(--color-paper-cream)] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 text-center animate-in zoom-in duration-500">
+          <div className="text-8xl mb-6 animate-bounce">🎊</div>
+          <h1 className="text-3xl font-bold text-[#4CAF50] mb-4">¡Bienvenido Explorador!</h1>
+          <p className="text-gray-600 text-lg mb-8">
+            Tu perfil ha sido creado con éxito.
+            <br/><br/>
+            <span className="font-bold text-[#FF8C00]">Revisa tu correo electrónico</span> para activar tu acceso y comenzar la aventura.
+          </p>
+          <Button 
+            onClick={() => { setIsSuccess(false); setAuthMode('login'); }}
+            className="w-full bg-[#4CAF50] hover:bg-green-600 py-4 text-xl rounded-xl"
+          >
+            Volver al Inicio de Sesión
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-paper-cream)] flex items-center justify-center p-4">
@@ -178,6 +199,18 @@ export default function EstudianteLoginPage() {
               {showPassword ? "👁️" : "🙈"}
             </button>
           </div>
+          
+          {authMode === 'login' && (
+            <div className="text-right">
+              <button 
+                type="button" 
+                onClick={() => router.push('/recuperar-password')}
+                className="text-sm text-[#4CAF50] font-bold hover:underline"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
+          )}
           
           {authMode === 'register' && (
             <>
