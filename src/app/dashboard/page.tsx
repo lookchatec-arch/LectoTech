@@ -173,19 +173,20 @@ export default function DashboardPage() {
         nombre: profile?.full_name || user.user_metadata?.full_name || 'Estudiante',
         grado: user.user_metadata?.grado || '5',
         foto: profile?.avatar_url || '',
-        email: user.email || ''
+        email: user.email || '',
+        clase: profile?.clase || user.user_metadata?.clase || ''
       };
       setEstudianteInfo(info);
-      fetchLibros(user.email);
+      fetchLibros(info.clase);
     }
   };
 
-  const fetchLibros = async (email: string | undefined) => {
-    if (!email) return;
+  const fetchLibros = async (claseCode: string | undefined) => {
+    if (!claseCode) return;
     const { data } = await supabase
       .from('library_books')
       .select('*')
-      .eq('student_email', email);
+      .eq('class_code', claseCode);
     if (data) setLibros(data as any);
   };
 

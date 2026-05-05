@@ -16,12 +16,17 @@ export default function ProfesorPage() {
   const [perfil, setPerfil] = useState({ id: '', nombre: 'Profesor', foto: '', email: '' });
 
   // Clases y Estudiantes State
-  const [clases, setClases] = useState([{ id: 1, nombre: '5to Básica', codigo: '5TO-CLASE' }]);
+  const [clases] = useState([
+    { id: 1, nombre: '5to Básica', codigo: '5TO-CLASE' },
+    { id: 2, nombre: '6to Básica', codigo: '6TO-CLASE' },
+    { id: 3, nombre: '7mo Básica', codigo: '7MO-CLASE' }
+  ]);
+  const [selectedClaseCode, setSelectedClaseCode] = useState<string | null>(null);
   const [estudiantes, setEstudiantes] = useState<any[]>([]);
 
   // Libros y Actividades State
   const [librosAsignados, setLibrosAsignados] = useState<any[]>([]);
-  const [nuevoLibro, setNuevoLibro] = useState({ titulo: '', emailEstudiante: '', archivo: null as File | null });
+  const [nuevoLibro, setNuevoLibro] = useState({ titulo: '', claseDestino: '5TO-CLASE', archivo: null as File | null });
 
   useEffect(() => {
     fetchUserData();
@@ -43,16 +48,13 @@ export default function ProfesorPage() {
         foto: profile?.avatar_url || ''
       });
 
-      // Cargar estudiantes que se hayan registrado con el código
-      const { data: authUsers, error } = await supabase.auth.admin.listUsers();
-      // Nota: listUsers solo funciona con service_role. 
-      // Para efectos de esta demo, usaremos un mock o buscaremos en una tabla de perfiles.
+      // Cargar todos los perfiles de estudiantes
       const { data: profiles } = await supabase
         .from('profiles')
         .select('*')
         .eq('role', 'estudiante');
       
-      if (profiles) setEstudiantes(profiles.map(p => ({ id: p.id, nombre: p.full_name, email: p.email, clase: 'Clase Registrada' })));
+      if (profiles) setEstudiantes(profiles);
       
       fetchLibros(user.id);
     }
@@ -99,6 +101,13 @@ export default function ProfesorPage() {
     e.preventDefault();
     if (!nuevoLibro.archivo || !nuevoLibro.titulo) return;
 
+    // Verificar si hay estudiantes en la clase antes de subir
+    const tieneEstudiantes = estudiantes.some(est => est.clase === nuevoLibro.claseDestino);
+    if (!tieneEstudiantes) {
+      alert(`No existen estudiantes matriculados todavía en ${nuevoLibro.claseDestino}.`);
+      return;
+    }
+
     setLoading(true);
     const file = nuevoLibro.archivo;
     const filePath = `books/${Date.now()}-${file.name}`;
@@ -114,15 +123,15 @@ export default function ProfesorPage() {
 
       const { error: dbError } = await supabase.from('library_books').insert({
         teacher_id: perfil.id,
-        student_email: nuevoLibro.emailEstudiante,
+        class_code: nuevoLibro.claseDestino, // Ahora asignamos por clase
         title: nuevoLibro.titulo,
         pdf_url: publicUrl
       });
 
       if (dbError) alert("Error guardando en BD: " + dbError.message);
       else {
-        alert("Libro asignado con éxito!");
-        setNuevoLibro({ titulo: '', emailEstudiante: '', archivo: null });
+        alert("¡Libro asignado con éxito a toda la clase!");
+        setNuevoLibro({ ...nuevoLibro, titulo: '', archivo: null });
         fetchLibros(perfil.id);
       }
     }
@@ -139,6 +148,10 @@ export default function ProfesorPage() {
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
     pdf.save('reporte_estadisticas_alumnos.pdf');
   };
+
+  const estudiantesFiltrados = selectedClaseCode 
+    ? estudiantes.filter(est => est.clase === selectedClaseCode)
+    : [];
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto min-h-screen pb-24">
@@ -210,26 +223,59 @@ export default function ProfesorPage() {
 
       {/* PESTAÑA: ESTUDIANTES */}
       {activeTab === 'clases' && (
-        <div className="grid grid-cols-1 gap-8 animate-in fade-in duration-300">
-          <Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-300">
+          <Card className="lg:col-span-1">
             <CardHeader className="bg-blue-50">
-              <h2 className="text-xl font-bold text-[#2A5C82]">🏫 Códigos de Clases Activos</h2>
+              <h2 className="text-xl font-bold text-[#2A5C82]">🏫 Selecciona Clase</h2>
+            </CardHeader>
+            <CardContent className="py-6 space-y-3">
+              {clases.map((c) => (
+                <button 
+                  key={c.id}
+                  onClick={() => setSelectedClaseCode(c.codigo)}
+                  className={`w-full p-4 border rounded-xl flex justify-between items-center transition-all ${selectedClaseCode === c.codigo ? 'bg-[#2A5C82] text-white scale-105 shadow-md' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'}`}
+                >
+                  <span className="font-bold">{c.nombre}</span>
+                  <span className={`text-xs px-2 py-1 rounded-full ${selectedClaseCode === c.codigo ? 'bg-white text-[#2A5C82]' : 'bg-gray-200'}`}>
+                    {estudiantes.filter(e => e.clase === c.codigo).length} alumnos
+                  </span>
+                </button>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-2">
+            <CardHeader className="bg-white border-b">
+              <h2 className="text-xl font-bold text-gray-800">
+                {selectedClaseCode ? `Alumnos en ${selectedClaseCode}` : 'Selecciona una clase para ver alumnos'}
+              </h2>
             </CardHeader>
             <CardContent className="py-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 border rounded-lg bg-gray-50 text-center">
-                  <p className="text-sm font-bold text-gray-500">5TO GRADO</p>
-                  <code className="text-2xl font-bold text-[#2A5C82]">5TO-CLASE</code>
+              {!selectedClaseCode ? (
+                <div className="text-center py-12 text-gray-400">
+                  <span className="text-6xl mb-4 block">🖱️</span>
+                  Haz clic en un código de clase a la izquierda.
                 </div>
-                <div className="p-4 border rounded-lg bg-gray-50 text-center">
-                  <p className="text-sm font-bold text-gray-500">6TO GRADO</p>
-                  <code className="text-2xl font-bold text-[#2A5C82]">6TO-CLASE</code>
+              ) : estudiantesFiltrados.length === 0 ? (
+                <div className="text-center py-12 text-orange-500 font-bold bg-orange-50 rounded-2xl border border-orange-100">
+                  <span className="text-5xl mb-4 block">⚠️</span>
+                  No hay estudiantes registrados todavía en esta clase.
                 </div>
-                <div className="p-4 border rounded-lg bg-gray-50 text-center">
-                  <p className="text-sm font-bold text-gray-500">7MO GRADO</p>
-                  <code className="text-2xl font-bold text-[#2A5C82]">7MO-CLASE</code>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {estudiantesFiltrados.map(est => (
+                    <div key={est.id} className="p-4 border rounded-xl bg-gray-50 flex items-center gap-4 shadow-sm">
+                      <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-xl overflow-hidden">
+                        {est.avatar_url ? <img src={est.avatar_url} className="w-full h-full object-cover" /> : '👤'}
+                      </div>
+                      <div>
+                        <p className="font-bold text-[#2A5C82]">{est.full_name}</p>
+                        <p className="text-xs text-gray-500">{est.email}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -240,44 +286,39 @@ export default function ProfesorPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-300">
           <Card>
             <CardHeader className="bg-[#4CAF50] text-white rounded-t-2xl">
-              <h2 className="text-xl font-bold">📚 Subir Libro a Biblioteca</h2>
+              <h2 className="text-xl font-bold">📚 Asignar Libro por Clase</h2>
             </CardHeader>
             <CardContent className="py-6">
               <form onSubmit={handleUploadBook} className="flex flex-col gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Título del Libro</label>
                   <input 
-                    type="text" 
-                    required
-                    value={nuevoLibro.titulo}
+                    type="text" required value={nuevoLibro.titulo}
                     onChange={(e) => setNuevoLibro({...nuevoLibro, titulo: e.target.value})}
                     className="w-full p-3 border rounded-lg"
-                    placeholder="Ej. Don Quijote para Niños"
+                    placeholder="Ej. Guía de Lectura 5to"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Email del Estudiante (Asignar a:)</label>
-                  <input 
-                    type="email" 
-                    required
-                    value={nuevoLibro.emailEstudiante}
-                    onChange={(e) => setNuevoLibro({...nuevoLibro, emailEstudiante: e.target.value})}
-                    className="w-full p-3 border rounded-lg"
-                    placeholder="estudiante@ejemplo.com"
-                  />
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Asignar a Clase:</label>
+                  <select 
+                    value={nuevoLibro.claseDestino}
+                    onChange={(e) => setNuevoLibro({...nuevoLibro, claseDestino: e.target.value})}
+                    className="w-full p-3 border rounded-lg font-bold text-[#2A5C82]"
+                  >
+                    {clases.map(c => <option key={c.id} value={c.codigo}>{c.nombre} ({c.codigo})</option>)}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Archivo PDF</label>
                   <input 
-                    type="file" 
-                    required
-                    accept="application/pdf"
+                    type="file" required accept="application/pdf"
                     onChange={(e) => setNuevoLibro({...nuevoLibro, archivo: e.target.files?.[0] || null})}
                     className="w-full p-3 border rounded-lg"
                   />
                 </div>
                 <Button type="submit" disabled={loading} className="bg-[#4CAF50] hover:bg-green-600 py-4 mt-2">
-                  {loading ? 'Subiendo...' : 'Publicar Libro en Biblioteca'}
+                  {loading ? 'Subiendo...' : 'Publicar Libro para la Clase'}
                 </Button>
               </form>
             </CardContent>
@@ -285,7 +326,7 @@ export default function ProfesorPage() {
 
           <Card>
             <CardHeader className="bg-gray-100">
-              <h2 className="text-xl font-bold text-gray-800">📋 Libros en Biblioteca</h2>
+              <h2 className="text-xl font-bold text-gray-800">📋 Libros Publicados</h2>
             </CardHeader>
             <CardContent className="py-6">
               {librosAsignados.length === 0 ? (
@@ -296,7 +337,7 @@ export default function ProfesorPage() {
                     <div key={lib.id} className="p-4 border border-l-4 border-l-[#4CAF50] rounded-xl bg-white flex justify-between items-center">
                       <div>
                         <h3 className="font-bold text-gray-800">{lib.title}</h3>
-                        <p className="text-xs text-gray-500">Asignado a: {lib.student_email}</p>
+                        <p className="text-xs text-[#4CAF50] font-bold">Clase: {lib.class_code}</p>
                       </div>
                       <a href={lib.pdf_url} target="_blank" rel="noreferrer" className="text-blue-500 font-bold text-sm hover:underline">Ver PDF</a>
                     </div>
