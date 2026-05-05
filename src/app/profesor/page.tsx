@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabaseClient';
 export default function ProfesorPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'panel' | 'clases' | 'actividades' | 'mensajes' | 'perfil'>('panel');
+  const [selectedMessageForDetails, setSelectedMessageForDetails] = useState<any | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const statsRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
@@ -40,7 +41,7 @@ export default function ProfesorPage() {
 
   useEffect(() => {
     fetchUserData();
-  }, []);
+  }, [activeTab]); // Refrescar datos cada vez que se cambia de pestaña
 
   const fetchUserData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -731,13 +732,21 @@ export default function ProfesorPage() {
                           <p className="text-gray-800 font-medium whitespace-pre-wrap mb-4">{msg.content}</p>
                           
                           {/* INTERACCIONES EN PANEL DOCENTE */}
-                          <div className="flex items-center gap-4 mb-4">
-                            <span className="flex items-center gap-1 text-yellow-600 font-bold bg-yellow-50 px-2 py-1 rounded-lg text-xs">
-                              ⭐ {msg.message_stars?.length || 0}
-                            </span>
-                            <span className="flex items-center gap-1 text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded-lg text-xs">
-                              💬 {msg.message_comments?.length || 0}
-                            </span>
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-4">
+                              <span className="flex items-center gap-1 text-yellow-600 font-bold bg-yellow-50 px-3 py-1.5 rounded-xl text-xs border border-yellow-100">
+                                ⭐ {msg.message_stars?.length || 0}
+                              </span>
+                              <span className="flex items-center gap-1 text-blue-600 font-bold bg-blue-50 px-3 py-1.5 rounded-xl text-xs border border-blue-100">
+                                💬 {msg.message_comments?.length || 0}
+                              </span>
+                            </div>
+                            <button 
+                              onClick={() => setSelectedMessageForDetails(msg)}
+                              className="text-[10px] font-black uppercase text-[#2A5C82] hover:underline flex items-center gap-1"
+                            >
+                              Ver detalles 👁️
+                            </button>
                           </div>
 
                           {msg.message_comments?.length > 0 && (
@@ -821,6 +830,70 @@ export default function ProfesorPage() {
           )}
         </div>
       </main>
+
+      {/* MODAL DE DETALLES DE INTERACCIÓN */}
+      {selectedMessageForDetails && (
+        <div className="fixed inset-0 bg-[#2A5C82]/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-in zoom-in duration-300">
+            <div className="p-6 bg-gradient-to-r from-[#2A5C82] to-blue-500 text-white flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-black">Detalles del Mensaje</h2>
+                <p className="text-xs opacity-80 font-bold uppercase tracking-widest">{new Date(selectedMessageForDetails.created_at).toLocaleString()}</p>
+              </div>
+              <button onClick={() => setSelectedMessageForDetails(null)} className="bg-white/20 hover:bg-white/40 p-2 rounded-xl transition-colors text-2xl">✕</button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-8 space-y-8">
+              {/* SECCIÓN ESTRELLAS */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-black text-gray-800 flex items-center gap-2">
+                  <span className="text-2xl">⭐</span> Alumnos que les gustó
+                </h3>
+                {selectedMessageForDetails.message_stars?.length === 0 ? (
+                  <p className="text-gray-400 italic text-sm">Nadie ha dado estrella todavía.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedMessageForDetails.message_stars.map((s: any, idx: number) => {
+                      const est = estudiantes.find(e => e.id === s.user_id);
+                      return (
+                        <div key={idx} className="bg-yellow-50 text-yellow-700 px-3 py-1.5 rounded-full text-xs font-black border border-yellow-200">
+                          👤 {est?.full_name || 'Estudiante'}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* SECCIÓN COMENTARIOS */}
+              <div className="space-y-4 pt-8 border-t border-gray-100">
+                <h3 className="text-lg font-black text-gray-800 flex items-center gap-2">
+                  <span className="text-2xl">💬</span> Comentarios detallados
+                </h3>
+                {selectedMessageForDetails.message_comments?.length === 0 ? (
+                  <p className="text-gray-400 italic text-sm">No hay comentarios todavía.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {selectedMessageForDetails.message_comments.map((c: any) => (
+                      <div key={c.id} className="bg-gray-50 p-5 rounded-2xl border-2 border-white shadow-sm">
+                        <div className="flex justify-between items-center mb-2">
+                          <p className="font-black text-[#2A5C82]">{c.user_name}</p>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase">{new Date(c.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <p className="text-gray-700 text-sm leading-relaxed">{c.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="p-6 bg-gray-50 text-center">
+              <Button onClick={() => setSelectedMessageForDetails(null)} className="bg-[#2A5C82] hover:bg-blue-700 px-12 py-3 rounded-xl font-black">Entendido</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
