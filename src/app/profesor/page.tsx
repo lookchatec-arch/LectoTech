@@ -64,7 +64,16 @@ export default function ProfesorPage() {
         .select('*')
         .eq('role', 'estudiante');
       
-      if (profiles) setEstudiantes(profiles);
+      if (profiles) {
+        // --- PROCESAMIENTO CRÍTICO DE ESTUDIANTES ---
+        const estudiantesProcesados = profiles.map(p => ({
+          ...p,
+          full_name: p.full_name || "Estudiante Explorador",
+          email: p.email || "S/N",
+          clase: p.clase || "S/A"
+        }));
+        setEstudiantes(estudiantesProcesados);
+      }
       fetchLibros(user.id);
       fetchMensajes(user.id);
     }
