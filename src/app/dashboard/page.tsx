@@ -231,9 +231,19 @@ export default function DashboardPage() {
           <SidebarButton id="retos" icon="🏆" label="Retos" />
           <SidebarButton id="juegos" icon="🎮" label="Juegos" />
           <SidebarButton id="biblioteca" icon="📚" label="Mi Biblioteca" />
-          <div className="mt-auto pt-8 border-t border-blue-400/30">
+          <div className="mt-auto pt-8 border-t border-blue-400/30 space-y-2">
             <SidebarButton id="guia" icon="🗺️" label="Guía" />
             <SidebarButton id="quienes-somos" icon="ℹ️" label="Nosotros" />
+            <button
+              onClick={async () => {
+                await supabase.auth.signOut();
+                router.push('/');
+              }}
+              className="flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left font-bold text-red-200 hover:bg-red-500/20 hover:text-red-100"
+            >
+              <span className="text-2xl">🚪</span>
+              <span className="hidden md:block">Cerrar Sesión</span>
+            </button>
           </div>
         </nav>
       </aside>

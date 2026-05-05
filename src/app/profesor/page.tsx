@@ -166,16 +166,27 @@ export default function ProfesorPage() {
           </div>
         </div>
         
-        <div className="flex gap-2 bg-gray-100 p-1 rounded-xl shadow-sm overflow-x-auto w-full md:w-auto">
-          {['panel', 'clases', 'actividades', 'perfil'].map((tab) => (
-            <button 
-              key={tab}
-              onClick={() => setActiveTab(tab as any)}
-              className={`px-4 py-2 rounded-lg font-bold transition-all capitalize whitespace-nowrap ${activeTab === tab ? 'bg-white text-[#2A5C82] shadow-sm' : 'text-gray-600 hover:bg-gray-200'}`}
-            >
-              {tab === 'clases' ? 'Estudiantes' : tab}
-            </button>
-          ))}
+        <div className="flex flex-col md:flex-row gap-2 bg-gray-100 p-1 rounded-xl shadow-sm overflow-x-auto w-full md:w-auto items-center">
+          <div className="flex gap-2">
+            {['panel', 'clases', 'actividades', 'perfil'].map((tab) => (
+              <button 
+                key={tab}
+                onClick={() => setActiveTab(tab as any)}
+                className={`px-4 py-2 rounded-lg font-bold transition-all capitalize whitespace-nowrap ${activeTab === tab ? 'bg-white text-[#2A5C82] shadow-sm' : 'text-gray-600 hover:bg-gray-200'}`}
+              >
+                {tab === 'clases' ? 'Estudiantes' : tab}
+              </button>
+            ))}
+          </div>
+          <Button 
+            onClick={async () => {
+              await supabase.auth.signOut();
+              router.push('/');
+            }}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-sm ml-2"
+          >
+            Cerrar Sesión 🚪
+          </Button>
         </div>
       </header>
 
