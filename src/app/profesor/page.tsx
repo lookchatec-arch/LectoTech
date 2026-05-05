@@ -72,7 +72,11 @@ export default function ProfesorPage() {
   const fetchMensajes = async (teacherId: string) => {
     const { data } = await supabase
       .from('messages')
-      .select('*')
+      .select(`
+        *,
+        message_stars(user_id),
+        message_comments(*)
+      `)
       .eq('sender_id', teacherId)
       .order('created_at', { ascending: false });
     if (data) setMensajesEnviados(data);
@@ -154,6 +158,20 @@ export default function ProfesorPage() {
       }
       setLoading(false);
     }
+  };
+
+  const handleDeleteMessage = async (msgId: string) => {
+    if (!confirm("¿Seguro que quieres eliminar este mensaje?")) return;
+    const { error } = await supabase.from('messages').delete().eq('id', msgId);
+    if (error) alert("Error: " + error.message);
+    else fetchMensajes(perfil.id);
+  };
+
+  const handleDeleteBook = async (bookId: string) => {
+    if (!confirm("¿Seguro que quieres eliminar este libro de la biblioteca?")) return;
+    const { error } = await supabase.from('library_books').delete().eq('id', bookId);
+    if (error) alert("Error: " + error.message);
+    else fetchLibros(perfil.id);
   };
 
   const handleUploadBook = async (e: React.FormEvent) => {
@@ -541,9 +559,14 @@ export default function ProfesorPage() {
                               <p className="text-xs text-[#4CAF50] font-black uppercase tracking-widest mt-1">Clase: {lib.class_code}</p>
                             </div>
                           </div>
-                          <a href={lib.pdf_url} target="_blank" rel="noreferrer" className="bg-gray-100 hover:bg-[#4CAF50] hover:text-white p-3 rounded-xl transition-all">
-                            👁️
-                          </a>
+                          <div className="flex gap-2">
+                            <a href={lib.pdf_url} target="_blank" rel="noreferrer" className="bg-gray-100 hover:bg-[#4CAF50] hover:text-white p-3 rounded-xl transition-all">
+                              👁️
+                            </a>
+                            <button onClick={() => handleDeleteBook(lib.id)} className="bg-gray-100 hover:bg-red-500 hover:text-white p-3 rounded-xl transition-all">
+                              🗑️
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -647,9 +670,34 @@ export default function ProfesorPage() {
                             <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${msg.target_type === 'class' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
                               {msg.target_type === 'class' ? `🏫 Clase: ${msg.target_id}` : `👤 Privado`}
                             </span>
-                            <span className="text-xs text-gray-400 font-bold">{new Date(msg.created_at).toLocaleString()}</span>
+                            <div className="flex gap-2">
+                              <span className="text-xs text-gray-400 font-bold">{new Date(msg.created_at).toLocaleString()}</span>
+                              <button onClick={() => handleDeleteMessage(msg.id)} className="text-red-400 hover:text-red-600 transition-colors">🗑️</button>
+                            </div>
                           </div>
                           <p className="text-gray-800 font-medium whitespace-pre-wrap mb-4">{msg.content}</p>
+                          
+                          {/* INTERACCIONES EN PANEL DOCENTE */}
+                          <div className="flex items-center gap-4 mb-4">
+                            <span className="flex items-center gap-1 text-yellow-600 font-bold bg-yellow-50 px-2 py-1 rounded-lg text-xs">
+                              ⭐ {msg.message_stars?.length || 0}
+                            </span>
+                            <span className="flex items-center gap-1 text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded-lg text-xs">
+                              💬 {msg.message_comments?.length || 0}
+                            </span>
+                          </div>
+
+                          {msg.message_comments?.length > 0 && (
+                            <div className="bg-gray-50 rounded-xl p-3 space-y-2 mb-4">
+                              {msg.message_comments.map((c: any) => (
+                                <div key={c.id} className="text-xs">
+                                  <span className="font-black text-[#2A5C82]">{c.user_name}: </span>
+                                  <span className="text-gray-600">{c.content}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
                           {msg.media_url && (
                             <div className="mt-4 rounded-2xl overflow-hidden border border-gray-100">
                               {msg.media_type === 'image' ? (

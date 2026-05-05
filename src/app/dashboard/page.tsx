@@ -145,56 +145,112 @@ const QuienesSomosView = () => (
   </div>
 );
 
-const MuroView = ({ mensajes }: { mensajes: any[] }) => (
-  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
-    <div className="flex items-center justify-between">
-      <h2 className="text-2xl font-bold text-[#2A5C82]">📢 Muro de la Clase</h2>
-      <span className="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest">Avisos del Profesor</span>
-    </div>
+const MuroView = ({ mensajes, onStar, onComment, currentUserId }: { mensajes: any[], onStar: (id: string) => void, onComment: (id: string, content: string) => void, currentUserId: string }) => {
+  const [commentInputs, setCommentInputs] = useState<{[key: string]: string}>({});
 
-    {mensajes.length === 0 ? (
-      <div className="bg-white rounded-3xl p-12 shadow-sm border border-gray-100 text-center">
-        <div className="text-6xl mb-6">📭</div>
-        <p className="text-gray-400 font-bold text-lg">No hay mensajes nuevos en el muro por ahora.</p>
+  return (
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-[#2A5C82]">📢 Muro de la Clase</h2>
+        <span className="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest">Avisos del Profesor</span>
       </div>
-    ) : (
-      <div className="space-y-6">
-        {mensajes.map((msg) => (
-          <div key={msg.id} className={`p-6 md:p-8 rounded-3xl shadow-sm border-2 transition-all ${msg.target_type === 'student' ? 'bg-purple-50 border-purple-100' : 'bg-white border-gray-50'}`}>
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#2A5C82] rounded-xl flex items-center justify-center text-xl">👨‍🏫</div>
-                <div>
-                  <p className="font-black text-[#2A5C82]">Mensaje del Profesor</p>
-                  <p className="text-xs text-gray-400 font-bold">{new Date(msg.created_at).toLocaleDateString()}</p>
+
+      {mensajes.length === 0 ? (
+        <div className="bg-white rounded-3xl p-12 shadow-sm border border-gray-100 text-center">
+          <div className="text-6xl mb-6">📭</div>
+          <p className="text-gray-400 font-bold text-lg">No hay mensajes nuevos en el muro por ahora.</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {mensajes.map((msg) => {
+            const hasStarred = msg.message_stars?.some((s: any) => s.user_id === currentUserId);
+            return (
+              <div key={msg.id} className={`p-6 md:p-8 rounded-3xl shadow-sm border-2 transition-all ${msg.target_type === 'student' ? 'bg-purple-50 border-purple-100' : 'bg-white border-gray-50'}`}>
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#2A5C82] rounded-xl flex items-center justify-center text-xl">👨‍🏫</div>
+                    <div>
+                      <p className="font-black text-[#2A5C82]">Mensaje del Profesor</p>
+                      <p className="text-xs text-gray-400 font-bold">{new Date(msg.created_at).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  {msg.target_type === 'student' && (
+                    <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Privado para ti</span>
+                  )}
+                </div>
+                
+                <p className="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                
+                {msg.media_url && (
+                  <div className="mt-6 rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+                    {msg.media_type === 'image' ? (
+                      <img src={msg.media_url} alt="Adjunto" className="w-full max-h-96 object-cover" />
+                    ) : (
+                      <a href={msg.media_url} target="_blank" rel="noreferrer" className="flex items-center gap-4 p-5 bg-gray-50 hover:bg-blue-50 transition-all group">
+                        <span className="text-3xl">📄</span>
+                        <div className="text-left">
+                          <p className="font-black text-[#2A5C82] group-hover:underline">Ver PDF Adjunto</p>
+                          <p className="text-xs text-gray-400 font-bold tracking-widest uppercase">Haz clic para abrir</p>
+                        </div>
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {/* INTERACCIONES */}
+                <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col gap-6">
+                  <div className="flex items-center gap-6">
+                    <button 
+                      onClick={() => onStar(msg.id)}
+                      className={`flex items-center gap-2 font-bold transition-all px-4 py-2 rounded-full ${hasStarred ? 'bg-yellow-100 text-yellow-600 scale-110' : 'bg-gray-50 text-gray-400 hover:bg-yellow-50'}`}
+                    >
+                      <span className="text-xl">⭐</span>
+                      <span>{msg.message_stars?.length || 0}</span>
+                    </button>
+                    <div className="flex items-center gap-2 text-gray-400 font-bold">
+                      <span className="text-xl">💬</span>
+                      <span>{msg.message_comments?.length || 0} comentarios</span>
+                    </div>
+                  </div>
+
+                  {/* LISTA DE COMENTARIOS */}
+                  <div className="space-y-3">
+                    {msg.message_comments?.map((comment: any) => (
+                      <div key={comment.id} className="bg-gray-50 p-4 rounded-2xl">
+                        <p className="text-xs font-black text-[#2A5C82] mb-1">{comment.user_name}</p>
+                        <p className="text-gray-700 text-sm">{comment.content}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* INPUT DE COMENTARIO */}
+                  <div className="flex gap-2">
+                    <input 
+                      type="text"
+                      value={commentInputs[msg.id] || ''}
+                      onChange={(e) => setCommentInputs({...commentInputs, [msg.id]: e.target.value})}
+                      placeholder="Escribe un comentario..."
+                      className="flex-1 bg-gray-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-100 outline-none"
+                    />
+                    <button 
+                      onClick={() => {
+                        onComment(msg.id, commentInputs[msg.id]);
+                        setCommentInputs({...commentInputs, [msg.id]: ''});
+                      }}
+                      className="bg-[#2A5C82] text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors"
+                    >
+                      Enviar
+                    </button>
+                  </div>
                 </div>
               </div>
-              {msg.target_type === 'student' && (
-                <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Privado para ti</span>
-              )}
-            </div>
-            <p className="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-            {msg.media_url && (
-              <div className="mt-6 rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
-                {msg.media_type === 'image' ? (
-                  <img src={msg.media_url} alt="Adjunto" className="w-full max-h-96 object-cover" />
-                ) : (
-                  <a href={msg.media_url} target="_blank" rel="noreferrer" className="flex items-center gap-4 p-5 bg-gray-50 hover:bg-blue-50 transition-all group">
-                    <span className="text-3xl">📄</span>
-                    <div className="text-left">
-                      <p className="font-black text-[#2A5C82] group-hover:underline">Ver PDF Adjunto</p>
-                      <p className="text-xs text-gray-400 font-bold tracking-widest uppercase">Haz clic para abrir</p>
-                    </div>
-                  </a>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-);
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // --- Componente Principal ---
 
@@ -246,10 +302,36 @@ export default function DashboardPage() {
   const fetchMensajes = async (userId: string, claseCode: string) => {
     const { data } = await supabase
       .from('messages')
-      .select('*')
+      .select(`
+        *,
+        message_stars(user_id),
+        message_comments(*)
+      `)
       .or(`and(target_type.eq.class,target_id.eq.${claseCode}),and(target_type.eq.student,target_id.eq.${userId})`)
       .order('created_at', { ascending: false });
     if (data) setMensajes(data as any);
+  };
+
+  const handleAddStar = async (msgId: string) => {
+    const hasStarred = mensajes.find((m: any) => m.id === msgId)?.message_stars?.some((s: any) => s.user_id === estudianteInfo.id);
+    
+    if (hasStarred) {
+      await supabase.from('message_stars').delete().match({ message_id: msgId, user_id: estudianteInfo.id });
+    } else {
+      await supabase.from('message_stars').insert({ message_id: msgId, user_id: estudianteInfo.id });
+    }
+    fetchMensajes(estudianteInfo.id, (estudianteInfo as any).clase);
+  };
+
+  const handleAddComment = async (msgId: string, content: string) => {
+    if (!content.trim()) return;
+    const { error } = await supabase.from('message_comments').insert({
+      message_id: msgId,
+      user_id: estudianteInfo.id,
+      user_name: estudianteInfo.nombre,
+      content: content
+    });
+    if (!error) fetchMensajes(estudianteInfo.id, (estudianteInfo as any).clase);
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -324,7 +406,7 @@ export default function DashboardPage() {
 
         <div className="px-4 md:px-8 pb-12 pt-4 flex-1">
           {activeTab === 'perfil' && <PerfilView estudianteInfo={estudianteInfo} handleAvatarUpload={handleAvatarUpload} loading={loading} />}
-          {activeTab === 'muro' && <MuroView mensajes={mensajes} />}
+          {activeTab === 'muro' && <MuroView mensajes={mensajes} onStar={handleAddStar} onComment={handleAddComment} currentUserId={estudianteInfo.id} />}
           {activeTab === 'retos' && <RetosView estudianteInfo={estudianteInfo} router={router} />}
           {activeTab === 'juegos' && <JuegosView estudianteInfo={estudianteInfo} router={router} />}
           {activeTab === 'biblioteca' && <BibliotecaView libros={libros} setSelectedBook={setSelectedBook} />}
