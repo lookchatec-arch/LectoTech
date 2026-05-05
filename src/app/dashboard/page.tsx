@@ -458,8 +458,8 @@ export default function DashboardPage() {
   const router = useRouter();
   const [estudianteInfo, setEstudianteInfo] = useState({ id: '', nombre: 'Explorador', grado: '5', foto: '', email: '' });
   const [activeTab, setActiveTab] = useState('perfil');
-  const [libros, setLibros] = useState([]);
-  const [mensajes, setMensajes] = useState([]);
+  const [libros, setLibros] = useState<any[]>([]);
+  const [mensajes, setMensajes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedBook, setSelectedBook] = useState<any>(null);
 
