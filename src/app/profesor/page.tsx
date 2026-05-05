@@ -161,20 +161,6 @@ export default function ProfesorPage() {
     }
   };
 
-  const handleChangeStudentClass = async (studentId: string, newClass: string) => {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ clase: newClass })
-      .eq('id', studentId);
-    
-    if (error) {
-      alert("Error actualizando clase: " + error.message);
-    } else {
-      // Actualizar estado local
-      setEstudiantes(prev => prev.map(est => est.id === studentId ? { ...est, clase: newClass } : est));
-      alert("Clase asignada con éxito.");
-    }
-  };
 
   const handleDeleteMessage = async (msgId: string) => {
     if (!confirm("¿Seguro que quieres eliminar este mensaje?")) return;
