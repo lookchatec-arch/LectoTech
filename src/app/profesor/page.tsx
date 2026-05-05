@@ -207,39 +207,46 @@ export default function ProfesorPage() {
   const exportarPDF = async () => {
     setLoading(true);
     const element = statsRef.current;
-    if (!element) return;
+    if (!element) {
+      setLoading(false);
+      return;
+    }
 
     try {
+      // Configuraciones para máxima compatibilidad
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 1.5, // Bajamos un poco la escala para evitar errores de memoria
         useCORS: true,
-        logging: false,
-        windowWidth: 1200
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        logging: true,
+        onclone: (clonedDoc) => {
+          // Aseguramos que elementos ocultos no afecten
+          const el = clonedDoc.getElementById('pdf-content');
+          if (el) el.style.display = 'block';
+        }
       });
       
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/jpeg', 0.8);
       const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
       
-      // Añadir encabezado decorativo al PDF
-      pdf.setFillColor(42, 92, 130); // Color LectoTech
-      pdf.rect(0, 0, pdfWidth, 20, 'F');
+      // Encabezado decorativo
+      pdf.setFillColor(42, 92, 130);
+      pdf.rect(0, 0, pdfWidth, 15, 'F');
       pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(14);
-      pdf.text('LECTOTECH - REPORTE ANALÍTICO DOCENTE', 10, 13);
+      pdf.setFontSize(12);
+      pdf.text('REPORTE OFICIAL LECTOTECH', pdfWidth / 2, 10, { align: 'center' });
       
-      pdf.addImage(imgData, 'PNG', 0, 25, pdfWidth, pdfHeight);
+      pdf.addImage(imgData, 'JPEG', 0, 20, pdfWidth, pdfHeight);
       
-      // Pie de página
-      pdf.setFontSize(10);
-      pdf.setTextColor(150, 150, 150);
-      pdf.text(`Generado el: ${new Date().toLocaleString()} | Docente: ${perfil.nombre}`, 10, pdf.internal.pageSize.getHeight() - 10);
-      
-      pdf.save(`Reporte_LectoTech_${perfil.nombre.replace(' ', '_')}.pdf`);
+      pdf.save(`Reporte_LectoTech_${new Date().getTime()}.pdf`);
+      alert("¡Reporte generado con éxito!");
     } catch (error) {
       console.error("Error al generar PDF:", error);
-      alert("Hubo un error al generar el reporte. Por favor, intenta de nuevo.");
+      alert("Error técnico al generar el PDF. Por favor, asegúrate de que no haya ventanas emergentes bloqueadas.");
     }
     setLoading(false);
   };
@@ -450,6 +457,20 @@ export default function ProfesorPage() {
                       </span>
                     </button>
                   ))}
+                  
+                  {/* Categoría especial para alumnos sin clase asignada */}
+                  <button 
+                    onClick={() => setSelectedClaseCode('S/A')}
+                    className={`w-full p-5 border-2 rounded-2xl flex justify-between items-center transition-all ${selectedClaseCode === 'S/A' ? 'border-orange-500 bg-orange-50 text-orange-600 scale-105 shadow-md' : 'border-gray-50 bg-gray-50 text-gray-600 hover:border-gray-200'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">❓</span>
+                      <span className="font-bold text-lg">Sin Asignar</span>
+                    </div>
+                    <span className={`text-xs px-3 py-1 rounded-full font-black ${selectedClaseCode === 'S/A' ? 'bg-orange-500 text-white' : 'bg-gray-200'}`}>
+                      {estudiantes.filter(e => e.clase === 'S/A' || !e.clase).length}
+                    </span>
+                  </button>
                 </CardContent>
               </Card>
 
@@ -465,7 +486,7 @@ export default function ProfesorPage() {
                       <div className="w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center text-6xl mb-6">🔍</div>
                       <p className="text-gray-400 font-bold text-lg">Haz clic en una clase de la izquierda para ver el listado.</p>
                     </div>
-                  ) : estudiantes.filter(e => e.clase === selectedClaseCode).length === 0 ? (
+                  ) : estudiantes.filter(e => selectedClaseCode === 'S/A' ? (e.clase === 'S/A' || !e.clase) : e.clase === selectedClaseCode).length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-center py-20 bg-orange-50 rounded-3xl border-2 border-dashed border-orange-200">
                       <span className="text-6xl mb-6">⚠️</span>
                       <p className="text-orange-600 font-black text-xl mb-2">Sin estudiantes registrados</p>
@@ -473,7 +494,7 @@ export default function ProfesorPage() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {estudiantes.filter(e => e.clase === selectedClaseCode).map(est => (
+                      {estudiantes.filter(e => selectedClaseCode === 'S/A' ? (e.clase === 'S/A' || !e.clase) : e.clase === selectedClaseCode).map(est => (
                         <div key={est.id} className="p-5 border-2 border-gray-50 rounded-2xl bg-white flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
                           <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center text-2xl overflow-hidden border-2 border-white shadow-sm">
                             {est.avatar_url ? <img src={est.avatar_url} className="w-full h-full object-cover" /> : '👤'}
