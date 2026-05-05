@@ -515,14 +515,18 @@ export default function ProfesorPage() {
                             {est.avatar_url ? <img src={est.avatar_url} className="w-full h-full object-cover" /> : '👤'}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-black text-[#2A5C82] truncate">{est.full_name}</p>
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
-                              <p className="text-xs text-gray-400 truncate flex-1">{est.email}</p>
+                            <p className="font-black text-[#2A5C82] text-lg truncate mb-1">
+                              {est.full_name || "Estudiante Explorador"}
+                            </p>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                              <p className="text-[10px] text-gray-400 font-bold truncate flex-1 uppercase tracking-tighter">
+                                {est.email}
+                              </p>
                               
                               <select 
                                 value={est.clase || 'S/A'}
                                 onChange={(e) => handleChangeStudentClass(est.id, e.target.value)}
-                                className="text-[10px] font-black uppercase bg-gray-50 border-none rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-100"
+                                className="text-[10px] font-black uppercase bg-blue-50 text-blue-600 border-none rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-100 cursor-pointer"
                               >
                                 <option value="S/A">Sin Grado</option>
                                 <option value="5TO-CLASE">5to Básica</option>
