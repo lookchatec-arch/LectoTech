@@ -3,14 +3,21 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { SabiasQue } from '@/components/SabiasQue';
+import { supabase } from '@/lib/supabaseClient';
 
 // --- Subcomponentes de Vistas ---
 
-const PerfilView = ({ estudianteInfo }: any) => (
+const PerfilView = ({ estudianteInfo, handleAvatarUpload, loading }: any) => (
   <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
     <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-8">
-      <div className="w-32 h-32 bg-gradient-to-tr from-blue-400 to-green-400 rounded-full flex items-center justify-center text-6xl shadow-inner border-4 border-white">
-        👦
+      <div className="relative group">
+        <div className="w-32 h-32 bg-gradient-to-tr from-blue-400 to-green-400 rounded-full flex items-center justify-center text-6xl shadow-inner border-4 border-white overflow-hidden">
+          {estudianteInfo.foto ? <img src={estudianteInfo.foto} className="w-full h-full object-cover" /> : '👦'}
+        </div>
+        <label className="absolute bottom-0 right-0 bg-[#FF8C00] p-2 rounded-full cursor-pointer shadow-lg hover:scale-110 transition-transform">
+          <span>{loading ? '⌛' : '📷'}</span>
+          <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={loading} />
+        </label>
       </div>
       <div className="flex-1 text-center md:text-left">
         <h2 className="text-3xl font-bold text-[#2A5C82] mb-2">{estudianteInfo.nombre}</h2>
@@ -20,9 +27,6 @@ const PerfilView = ({ estudianteInfo }: any) => (
           <span className="bg-yellow-100 text-yellow-800 px-4 py-1 rounded-full text-sm font-bold">120 🌟</span>
         </div>
       </div>
-      <button className="bg-[#FF8C00] hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-transform hover:scale-105">
-        Configurar Perfil
-      </button>
     </div>
     <SabiasQue />
   </div>
@@ -63,19 +67,9 @@ const RetosView = ({ estudianteInfo, router }: any) => {
               >
                 {nivel.icono}
               </button>
-              {nivel.completado && (
-                <div className="absolute -bottom-3 flex gap-1 bg-white px-2 py-1 rounded-full shadow-sm border border-gray-100">
-                  <span className="text-xs">⭐</span><span className="text-xs">⭐</span><span className="text-xs">⭐</span>
-                </div>
-              )}
             </div>
           );
         })}
-        <div className="relative z-10 mt-8">
-          <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center text-5xl md:text-6xl shadow-2xl border-b-8 border-purple-800 animate-bounce cursor-pointer hover:brightness-110 transition-all">
-            🎁
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -96,21 +90,39 @@ const JuegosView = ({ estudianteInfo, router }: any) => (
             {juego.icono}
           </div>
           <h3 className="font-bold text-gray-800 text-lg">{juego.titulo}</h3>
-          <button className="text-sm bg-gray-100 px-4 py-2 rounded-lg font-semibold text-gray-600 group-hover:bg-[#4CAF50] group-hover:text-white transition-colors">Jugar Ahora</button>
         </div>
       ))}
     </div>
   </div>
 );
 
-const BibliotecaView = ({ router }: any) => (
-  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 bg-white rounded-3xl p-8 shadow-sm border border-gray-100 text-center">
-    <div className="text-8xl mb-6">📚</div>
-    <h2 className="text-3xl font-bold text-[#2A5C82] mb-4">Biblioteca Interactiva</h2>
-    <p className="text-gray-600 max-w-lg mx-auto mb-8">Descubre mundos increíbles a través de historias diseñadas especialmente para ti. ¡Gana estrellas por cada libro que leas!</p>
-    <button onClick={() => router.push('/biblioteca')} className="bg-[#4CAF50] hover:bg-green-600 text-white font-bold py-4 px-8 rounded-full shadow-lg text-lg transition-transform hover:scale-105">
-      Entrar a la Biblioteca
-    </button>
+const BibliotecaView = ({ libros, setSelectedBook }: any) => (
+  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
+    <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 text-center">
+      <div className="text-6xl mb-4">📚</div>
+      <h2 className="text-3xl font-bold text-[#2A5C82] mb-2">Tu Biblioteca Personal</h2>
+      <p className="text-gray-600 mb-8">Aquí aparecerán los libros que tus profesores te asignen.</p>
+      
+      {libros.length === 0 ? (
+        <div className="p-12 border-2 border-dashed border-gray-200 rounded-2xl">
+          <p className="text-gray-400 font-medium">Aún no tienes libros asignados. ¡Sigue esforzándote!</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
+          {libros.map((libro: any) => (
+            <div key={libro.id} className="bg-gradient-to-br from-green-50 to-white p-6 rounded-2xl border border-green-100 shadow-sm hover:shadow-md transition-all">
+              <h3 className="font-bold text-[#2A5C82] text-xl mb-4">{libro.title}</h3>
+              <button 
+                onClick={() => setSelectedBook(libro)}
+                className="w-full bg-[#4CAF50] text-white py-3 rounded-xl font-bold hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+              >
+                📖 Empezar a Leer
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   </div>
 );
 
@@ -118,48 +130,18 @@ const GuiaView = () => (
   <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
     <h2 className="text-2xl font-bold text-[#2A5C82]">Guía de la Plataforma</h2>
     <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-      <div className="flex flex-col md:flex-row gap-8 items-center mb-8">
-        <div className="w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center text-6xl shadow-inner shrink-0">
-          🗺️
-        </div>
-        <div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">¿Cómo uso LectoTech?</h3>
-          <p className="text-gray-600">LectoTech es un mundo de aventuras. Tu objetivo es completar los <span className="font-bold text-orange-500">Retos</span> para ganar estrellas. Puedes practicar con los <span className="font-bold text-pink-500">Juegos</span> en cualquier momento y sumergirte en historias increíbles en la <span className="font-bold text-green-500">Biblioteca</span>.</p>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gray-50 p-4 rounded-xl text-center border border-gray-100">
-          <div className="text-3xl mb-2">⭐</div>
-          <h4 className="font-bold text-gray-800">Estrellas</h4>
-          <p className="text-sm text-gray-500">Gánalas completando lecturas y juegos de tus retos diarios.</p>
-        </div>
-        <div className="bg-gray-50 p-4 rounded-xl text-center border border-gray-100">
-          <div className="text-3xl mb-2">🔒</div>
-          <h4 className="font-bold text-gray-800">Desbloqueos</h4>
-          <p className="text-sm text-gray-500">Completa el reto actual para desbloquear el siguiente nivel.</p>
-        </div>
-        <div className="bg-gray-50 p-4 rounded-xl text-center border border-gray-100">
-          <div className="text-3xl mb-2">🏆</div>
-          <h4 className="font-bold text-gray-800">Logros</h4>
-          <p className="text-sm text-gray-500">Mira tu progreso en la pestaña de "Mi Perfil".</p>
-        </div>
-      </div>
+      <h3 className="text-xl font-bold text-gray-800 mb-4">¿Cómo funciona LectoTech?</h3>
+      <p className="text-gray-600">Completa retos para ganar estrellas y desbloquear nuevos niveles. Tu profesor puede asignarte libros especiales en la sección de Biblioteca.</p>
     </div>
   </div>
 );
 
 const QuienesSomosView = () => (
   <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 bg-gradient-to-br from-[#2A5C82] to-[#1a3a53] text-white rounded-3xl p-8 shadow-xl text-center">
-    <div className="text-7xl mb-6">🚀</div>
     <h2 className="text-3xl font-bold text-[#FFD700] mb-4">¿Quiénes Somos?</h2>
     <p className="text-lg text-blue-100 max-w-2xl mx-auto leading-relaxed">
-      En LectoTech, creemos que leer no tiene por qué ser aburrido. Somos un equipo apasionado por la educación y la tecnología, creando herramientas interactivas para que los estudiantes descubran la magia de las palabras de una forma divertida y dinámica.
+      En LectoTech, transformamos la lectura en una aventura épica usando neuroeducación y tecnología.
     </p>
-    <div className="mt-8 pt-8 border-t border-blue-400/30 flex flex-wrap justify-center gap-4">
-      <span className="bg-white/10 px-4 py-2 rounded-lg font-semibold">Educación interactiva</span>
-      <span className="bg-white/10 px-4 py-2 rounded-lg font-semibold">Neuroeducación</span>
-      <span className="bg-white/10 px-4 py-2 rounded-lg font-semibold">Gamificación</span>
-    </div>
   </div>
 );
 
@@ -167,20 +149,62 @@ const QuienesSomosView = () => (
 
 export default function DashboardPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [estudianteInfo, setEstudianteInfo] = useState({ nombre: 'Explorador', grado: '5' });
+  const [estudianteInfo, setEstudianteInfo] = useState({ id: '', nombre: 'Explorador', grado: '5', foto: '', email: '' });
   const [activeTab, setActiveTab] = useState('perfil');
+  const [libros, setLibros] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedBook, setSelectedBook] = useState<any>(null);
 
   useEffect(() => {
-    const nombre = searchParams.get('estudiante');
-    const grado = searchParams.get('grado');
-    if (nombre && grado) {
-      setEstudianteInfo({
-        nombre: nombre.charAt(0).toUpperCase() + nombre.slice(1),
-        grado: grado
-      });
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      const info = {
+        id: user.id,
+        nombre: profile?.full_name || user.user_metadata?.full_name || 'Estudiante',
+        grado: user.user_metadata?.grado || '5',
+        foto: profile?.avatar_url || '',
+        email: user.email || ''
+      };
+      setEstudianteInfo(info);
+      fetchLibros(user.email);
     }
-  }, [searchParams]);
+  };
+
+  const fetchLibros = async (email: string | undefined) => {
+    if (!email) return;
+    const { data } = await supabase
+      .from('library_books')
+      .select('*')
+      .eq('student_email', email);
+    if (data) setLibros(data as any);
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const filePath = `avatars/${estudianteInfo.id}-${Date.now()}`;
+      
+      setLoading(true);
+      const { error: uploadError } = await supabase.storage.from('avatares').upload(filePath, file);
+
+      if (!uploadError) {
+        const { data: { publicUrl } } = supabase.storage.from('avatares').getPublicUrl(filePath);
+        await supabase.from('profiles').upsert({ id: estudianteInfo.id, avatar_url: publicUrl, role: 'estudiante' });
+        setEstudianteInfo({ ...estudianteInfo, foto: publicUrl });
+      }
+      setLoading(false);
+    }
+  };
 
   const SidebarButton = ({ id, icon, label }: { id: string, icon: string, label: string }) => {
     const isActive = activeTab === id;
@@ -188,9 +212,7 @@ export default function DashboardPage() {
       <button
         onClick={() => setActiveTab(id)}
         className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left font-bold ${
-          isActive 
-            ? 'bg-white text-[#2A5C82] shadow-md scale-105' 
-            : 'text-blue-100 hover:bg-white/10 hover:text-white hover:translate-x-1'
+          isActive ? 'bg-white text-[#2A5C82] shadow-md scale-105' : 'text-blue-100 hover:bg-white/10 hover:text-white'
         }`}
       >
         <span className="text-2xl">{icon}</span>
@@ -201,37 +223,24 @@ export default function DashboardPage() {
 
   return (
     <div className="flex h-screen bg-[#F0F4F8] overflow-hidden">
-      {/* Sidebar Izquierdo */}
-      <aside className="w-20 md:w-72 bg-[#2A5C82] flex flex-col p-4 shadow-2xl z-20 flex-shrink-0 transition-all duration-300">
-        <h2 className="text-2xl font-bold mb-8 text-center border-b border-blue-400/30 pb-4 hidden md:block text-white">
-          Lecto<span className="text-[#FFD700]">Tech</span>
-        </h2>
-        <div className="text-3xl text-center mb-8 pb-4 border-b border-blue-400/30 md:hidden">🚀</div>
-        
-        <nav className="flex flex-col gap-2 flex-grow overflow-y-auto overflow-x-hidden custom-scrollbar pr-1">
+      <aside className="w-20 md:w-72 bg-[#2A5C82] flex flex-col p-4 shadow-2xl z-20 flex-shrink-0">
+        <h2 className="text-2xl font-bold mb-8 text-center hidden md:block text-white">Lecto<span className="text-[#FFD700]">Tech</span></h2>
+        <nav className="flex flex-col gap-2 flex-grow overflow-y-auto">
           <SidebarButton id="perfil" icon="👤" label="Mi Perfil" />
           <SidebarButton id="retos" icon="🏆" label="Retos" />
-          <SidebarButton id="juegos" icon="🎮" label="Juegos / Actividades" />
-          <SidebarButton id="biblioteca" icon="📚" label="Biblioteca Interactiva" />
-          
-          <div className="mt-auto pt-8 flex flex-col gap-2 border-t border-blue-400/30">
-            <SidebarButton id="guia" icon="🗺️" label="Guía de Plataforma" />
-            <SidebarButton id="quienes-somos" icon="ℹ️" label="Quiénes Somos" />
+          <SidebarButton id="juegos" icon="🎮" label="Juegos" />
+          <SidebarButton id="biblioteca" icon="📚" label="Mi Biblioteca" />
+          <div className="mt-auto pt-8 border-t border-blue-400/30">
+            <SidebarButton id="guia" icon="🗺️" label="Guía" />
+            <SidebarButton id="quienes-somos" icon="ℹ️" label="Nosotros" />
           </div>
         </nav>
       </aside>
 
-      {/* Contenido Principal Derecho */}
-      <main className="flex-1 flex flex-col h-full relative overflow-y-auto custom-scrollbar">
-        {/* Mobile Header Toggle (Opicional para futuro) */}
-        
-        {/* Top Header Fijo o Sticky */}
+      <main className="flex-1 flex flex-col h-full relative overflow-y-auto">
         <div className="sticky top-0 z-10 bg-[#F0F4F8]/80 backdrop-blur-md p-4 md:p-8 pb-4">
-          <header className="flex justify-between items-center bg-white p-4 px-6 md:px-8 rounded-2xl shadow-sm border border-gray-100">
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold text-[#2A5C82] truncate max-w-[200px] md:max-w-none">¡Hola, {estudianteInfo.nombre}!</h1>
-              <p className="text-gray-500 text-sm font-bold capitalize">{activeTab.replace('-', ' ')}</p>
-            </div>
+          <header className="flex justify-between items-center bg-white p-4 px-6 rounded-2xl shadow-sm border border-gray-100">
+            <h1 className="text-xl md:text-2xl font-bold text-[#2A5C82]">¡Hola, {estudianteInfo.nombre}!</h1>
             <div className="flex items-center gap-2 bg-yellow-50 px-4 py-2 rounded-xl border border-yellow-100">
               <span className="text-2xl animate-pulse">🌟</span>
               <span className="font-bold text-[#FFD700] text-xl">120</span>
@@ -239,35 +248,30 @@ export default function DashboardPage() {
           </header>
         </div>
 
-        {/* Dynamic Views */}
         <div className="px-4 md:px-8 pb-12 pt-4 flex-1">
-          {activeTab === 'perfil' && <PerfilView estudianteInfo={estudianteInfo} />}
+          {activeTab === 'perfil' && <PerfilView estudianteInfo={estudianteInfo} handleAvatarUpload={handleAvatarUpload} loading={loading} />}
           {activeTab === 'retos' && <RetosView estudianteInfo={estudianteInfo} router={router} />}
           {activeTab === 'juegos' && <JuegosView estudianteInfo={estudianteInfo} router={router} />}
-          {activeTab === 'biblioteca' && <BibliotecaView router={router} />}
+          {activeTab === 'biblioteca' && <BibliotecaView libros={libros} setSelectedBook={setSelectedBook} />}
           {activeTab === 'guia' && <GuiaView />}
           {activeTab === 'quienes-somos' && <QuienesSomosView />}
         </div>
       </main>
-      
-      {/* CSS extra para la scrollbar del dashboard */}
-      <style dangerouslySetInnerHTML={{__html: `
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: rgba(0,0,0,0.1);
-          border-radius: 10px;
-        }
-        aside .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: rgba(255,255,255,0.2);
-        }
-      `}} />
+
+      {/* Visor de PDF Modal */}
+      {selectedBook && (
+        <div className="fixed inset-0 bg-black/80 z-[100] flex flex-col items-center justify-center p-4">
+          <div className="w-full max-w-5xl bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[90vh]">
+            <div className="p-4 bg-[#2A5C82] text-white flex justify-between items-center">
+              <h2 className="font-bold truncate pr-4">{selectedBook.title}</h2>
+              <button onClick={() => setSelectedBook(null)} className="bg-red-500 hover:bg-red-600 px-4 py-1 rounded-lg font-bold">Cerrar</button>
+            </div>
+            <div className="flex-1 bg-gray-100">
+              <iframe src={selectedBook.pdf_url} className="w-full h-full border-none" title="Visor PDF" />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-
