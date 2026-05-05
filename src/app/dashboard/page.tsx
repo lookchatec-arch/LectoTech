@@ -284,6 +284,16 @@ export default function DashboardPage() {
         email: user.email || '',
         clase: profile?.clase || user.user_metadata?.clase || ''
       };
+
+      // --- Sincronización automática de Clase ---
+      if (!profile?.clase && user.user_metadata?.clase) {
+        await supabase
+          .from('profiles')
+          .update({ clase: user.user_metadata.clase })
+          .eq('id', user.id);
+        info.clase = user.user_metadata.clase;
+      }
+
       setEstudianteInfo(info);
       fetchLibros(info.clase);
       fetchMensajes(user.id, info.clase);

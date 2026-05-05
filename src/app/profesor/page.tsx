@@ -160,6 +160,21 @@ export default function ProfesorPage() {
     }
   };
 
+  const handleChangeStudentClass = async (studentId: string, newClass: string) => {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ clase: newClass })
+      .eq('id', studentId);
+    
+    if (error) {
+      alert("Error actualizando clase: " + error.message);
+    } else {
+      // Actualizar estado local
+      setEstudiantes(prev => prev.map(est => est.id === studentId ? { ...est, clase: newClass } : est));
+      alert("Clase asignada con éxito.");
+    }
+  };
+
   const handleDeleteMessage = async (msgId: string) => {
     if (!confirm("¿Seguro que quieres eliminar este mensaje?")) return;
     const { error } = await supabase.from('messages').delete().eq('id', msgId);
@@ -499,9 +514,22 @@ export default function ProfesorPage() {
                           <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center text-2xl overflow-hidden border-2 border-white shadow-sm">
                             {est.avatar_url ? <img src={est.avatar_url} className="w-full h-full object-cover" /> : '👤'}
                           </div>
-                          <div className="min-w-0">
+                          <div className="flex-1 min-w-0">
                             <p className="font-black text-[#2A5C82] truncate">{est.full_name}</p>
-                            <p className="text-xs text-gray-400 truncate">{est.email}</p>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
+                              <p className="text-xs text-gray-400 truncate flex-1">{est.email}</p>
+                              
+                              <select 
+                                value={est.clase || 'S/A'}
+                                onChange={(e) => handleChangeStudentClass(est.id, e.target.value)}
+                                className="text-[10px] font-black uppercase bg-gray-50 border-none rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-100"
+                              >
+                                <option value="S/A">Sin Grado</option>
+                                <option value="5TO-CLASE">5to Básica</option>
+                                <option value="6TO-CLASE">6to Básica</option>
+                                <option value="7MO-CLASE">7mo Básica</option>
+                              </select>
+                            </div>
                           </div>
                         </div>
                       ))}
