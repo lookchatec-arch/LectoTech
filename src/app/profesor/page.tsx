@@ -96,12 +96,6 @@ export default function ProfesorPage() {
     e.preventDefault();
     if (!nuevoLibro.archivo || !nuevoLibro.titulo) return;
 
-    const tieneEstudiantes = estudiantes.some(est => est.clase === nuevoLibro.claseDestino);
-    if (!tieneEstudiantes) {
-      alert(`No existen estudiantes matriculados todavía en ${nuevoLibro.claseDestino}.`);
-      return;
-    }
-
     setLoading(true);
     const file = nuevoLibro.archivo;
     const filePath = `books/${Date.now()}-${file.name}`;
