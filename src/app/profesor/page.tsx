@@ -10,10 +10,17 @@ import { supabase } from '@/lib/supabaseClient';
 
 export default function ProfesorPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'panel' | 'clases' | 'actividades' | 'perfil'>('panel');
+  const [activeTab, setActiveTab] = useState<'panel' | 'clases' | 'actividades' | 'mensajes' | 'perfil'>('panel');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const statsRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
+  
+  // Mensajes State
+  const [msgTargetType, setMsgTargetType] = useState<'class' | 'student'>('class');
+  const [msgTargetId, setMsgTargetId] = useState('');
+  const [msgContent, setMsgContent] = useState('');
+  const [msgFile, setMsgFile] = useState<File | null>(null);
+  const [mensajesEnviados, setMensajesEnviados] = useState<any[]>([]);
   
   // Perfil State
   const [perfil, setPerfil] = useState({ id: '', nombre: 'Profesor', foto: '', email: '' });
@@ -58,7 +65,64 @@ export default function ProfesorPage() {
       
       if (profiles) setEstudiantes(profiles);
       fetchLibros(user.id);
+      fetchMensajes(user.id);
     }
+  };
+
+  const fetchMensajes = async (teacherId: string) => {
+    const { data } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('sender_id', teacherId)
+      .order('created_at', { ascending: false });
+    if (data) setMensajesEnviados(data);
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!msgContent && !msgFile) return;
+    if (!msgTargetId) {
+      alert("Por favor selecciona un destino (clase o estudiante)");
+      return;
+    }
+
+    setLoading(true);
+    let mediaUrl = '';
+    let mediaType: 'image' | 'pdf' | undefined = undefined;
+
+    if (msgFile) {
+      const fileExt = msgFile.name.split('.').pop();
+      const fileName = `${perfil.id}-${Date.now()}.${fileExt}`;
+      const bucket = fileExt === 'pdf' ? 'biblioteca' : 'avatares'; // Reusamos buckets o creamos uno nuevo
+      
+      const { error: uploadError } = await supabase.storage.from(bucket).upload(`messages/${fileName}`, msgFile);
+      if (uploadError) {
+        alert("Error subiendo archivo: " + uploadError.message);
+      } else {
+        const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(`messages/${fileName}`);
+        mediaUrl = publicUrl;
+        mediaType = fileExt === 'pdf' ? 'pdf' : 'image';
+      }
+    }
+
+    const { error } = await supabase.from('messages').insert({
+      sender_id: perfil.id,
+      target_type: msgTargetType,
+      target_id: msgTargetId,
+      content: msgContent,
+      media_url: mediaUrl,
+      media_type: mediaType
+    });
+
+    if (error) {
+      alert("Error enviando mensaje: " + error.message);
+    } else {
+      alert("¡Mensaje enviado con éxito!");
+      setMsgContent('');
+      setMsgFile(null);
+      fetchMensajes(perfil.id);
+    }
+    setLoading(false);
   };
 
   const fetchLibros = async (teacherId: string) => {
@@ -161,6 +225,7 @@ export default function ProfesorPage() {
             <NavItem id="panel" icon="📊" label="Panel Analítico" />
             <NavItem id="clases" icon="👥" label="Mis Estudiantes" />
             <NavItem id="actividades" icon="📚" label="Biblioteca" />
+            <NavItem id="mensajes" icon="📩" label="Mensajes" />
             <NavItem id="perfil" icon="⚙️" label="Configuración" />
           </nav>
 
@@ -392,6 +457,124 @@ export default function ProfesorPage() {
                           <a href={lib.pdf_url} target="_blank" rel="noreferrer" className="bg-gray-100 hover:bg-[#4CAF50] hover:text-white p-3 rounded-xl transition-all">
                             👁️
                           </a>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'mensajes' && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <Card className="lg:col-span-1 shadow-xl border-none">
+                <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-400 text-white p-6 rounded-t-3xl">
+                  <h2 className="text-xl font-black">📩 Enviar Nuevo Mensaje</h2>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <form onSubmit={handleSendMessage} className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-black text-gray-700 mb-2 uppercase tracking-wider">Enviar a:</label>
+                      <div className="flex gap-2 mb-4">
+                        <button 
+                          type="button"
+                          onClick={() => { setMsgTargetType('class'); setMsgTargetId(''); }}
+                          className={`flex-1 py-2 rounded-xl font-bold transition-all ${msgTargetType === 'class' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-500'}`}
+                        >
+                          🏫 Clase
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => { setMsgTargetType('student'); setMsgTargetId(''); }}
+                          className={`flex-1 py-2 rounded-xl font-bold transition-all ${msgTargetType === 'student' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-500'}`}
+                        >
+                          👤 Estudiante
+                        </button>
+                      </div>
+
+                      {msgTargetType === 'class' ? (
+                        <select 
+                          value={msgTargetId}
+                          onChange={(e) => setMsgTargetId(e.target.value)}
+                          className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl font-bold text-[#2A5C82]"
+                        >
+                          <option value="">Selecciona una clase...</option>
+                          {clases.map(c => <option key={c.id} value={c.codigo}>{c.nombre}</option>)}
+                        </select>
+                      ) : (
+                        <select 
+                          value={msgTargetId}
+                          onChange={(e) => setMsgTargetId(e.target.value)}
+                          className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl font-bold text-[#2A5C82]"
+                        >
+                          <option value="">Selecciona un estudiante...</option>
+                          {estudiantes.map(e => <option key={e.id} value={e.id}>{e.full_name}</option>)}
+                        </select>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-black text-gray-700 mb-2 uppercase tracking-wider">Mensaje</label>
+                      <textarea 
+                        required
+                        value={msgContent}
+                        onChange={(e) => setMsgContent(e.target.value)}
+                        className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-blue-600 outline-none min-h-[150px]"
+                        placeholder="Escribe tu mensaje aquí..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-black text-gray-700 mb-2 uppercase tracking-wider">Adjuntar (Imagen o PDF)</label>
+                      <input 
+                        type="file" 
+                        accept="image/*,application/pdf"
+                        onChange={(e) => setMsgFile(e.target.files?.[0] || null)}
+                        className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl cursor-pointer"
+                      />
+                    </div>
+
+                    <Button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 py-6 text-xl rounded-2xl shadow-lg transition-transform hover:-translate-y-1">
+                      {loading ? 'Enviando...' : '🚀 Enviar Mensaje'}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              <Card className="lg:col-span-2 shadow-xl border-none">
+                <CardHeader className="bg-gray-50 border-b border-gray-100 p-6">
+                  <h2 className="text-xl font-black text-gray-800">📋 Mensajes Recientes</h2>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {mensajesEnviados.length === 0 ? (
+                    <div className="text-center py-20 text-gray-300">
+                      <span className="text-8xl block mb-6">📭</span>
+                      <p className="text-lg font-bold">Aún no has enviado mensajes.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2">
+                      {mensajesEnviados.map(msg => (
+                        <div key={msg.id} className="p-6 border-2 border-gray-50 rounded-3xl bg-white shadow-sm hover:border-blue-200 transition-all">
+                          <div className="flex justify-between items-start mb-3">
+                            <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${msg.target_type === 'class' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
+                              {msg.target_type === 'class' ? `🏫 Clase: ${msg.target_id}` : `👤 Privado`}
+                            </span>
+                            <span className="text-xs text-gray-400 font-bold">{new Date(msg.created_at).toLocaleString()}</span>
+                          </div>
+                          <p className="text-gray-800 font-medium whitespace-pre-wrap mb-4">{msg.content}</p>
+                          {msg.media_url && (
+                            <div className="mt-4 rounded-2xl overflow-hidden border border-gray-100">
+                              {msg.media_type === 'image' ? (
+                                <img src={msg.media_url} className="w-full max-h-64 object-cover" />
+                              ) : (
+                                <a href={msg.media_url} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-4 bg-gray-50 hover:bg-gray-100 transition-all">
+                                  <span className="text-2xl">📄</span>
+                                  <span className="font-bold text-blue-600">Ver PDF Adjunto</span>
+                                </a>
+                              )}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
