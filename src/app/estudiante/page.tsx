@@ -12,10 +12,21 @@ export default function EstudianteLoginPage() {
   const [nombres, setNombres] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [classCode, setClassCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+
+  const validatePassword = (pass: string) => {
+    const hasUpper = /[A-Z]/.test(pass);
+    const hasLower = /[a-z]/.test(pass);
+    const hasNumber = /[0-9]/.test(pass);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(pass);
+    const isLongEnough = pass.length >= 8;
+    return hasUpper && hasLower && hasNumber && hasSpecial && isLongEnough;
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,9 +38,20 @@ export default function EstudianteLoginPage() {
       if (authMode === 'register') {
         const codigoUpper = classCode.trim().toUpperCase();
         
-        // Validación de códigos estricta
         if (!['5TO-CLASE', '6TO-CLASE', '7MO-CLASE'].includes(codigoUpper)) {
-          setErrorMsg("Código de clase inválido. Verifica con tu profesor.");
+          setErrorMsg("Código de clase inválido.");
+          setLoading(false);
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          setErrorMsg("Las contraseñas no coinciden.");
+          setLoading(false);
+          return;
+        }
+
+        if (!validatePassword(password)) {
+          setErrorMsg("La contraseña no cumple con los requisitos de seguridad.");
           setLoading(false);
           return;
         }
@@ -56,13 +78,13 @@ export default function EstudianteLoginPage() {
         if (data.user?.identities?.length === 0) {
            setErrorMsg("Este correo ya está registrado.");
         } else {
-           setSuccessMsg("¡Registro exitoso! Por favor, verifica tu correo (si está configurado) o inicia sesión.");
+           setSuccessMsg("¡Registro exitoso! Ya puedes iniciar sesión.");
            setAuthMode('login');
            setPassword('');
+           setConfirmPassword('');
         }
 
       } else {
-        // Modo Login
         const { data, error } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password: password,
@@ -71,14 +93,13 @@ export default function EstudianteLoginPage() {
         if (error) throw error;
 
         if (data.user) {
-          // Extraemos el nombre y grado de los metadatos de Supabase
           const nombreUser = data.user.user_metadata?.full_name || 'Estudiante';
           const gradoUser = data.user.user_metadata?.grado || '5';
           router.push(`/dashboard?estudiante=${encodeURIComponent(nombreUser)}&grado=${gradoUser}`);
         }
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "Ocurrió un error inesperado.");
+      setErrorMsg(err.message === "Failed to fetch" ? "Error de conexión: Verifica las credenciales en el servidor." : err.message);
     } finally {
       setLoading(false);
     }
@@ -96,7 +117,7 @@ export default function EstudianteLoginPage() {
             ← Volver
           </button>
           
-          <div className="text-6xl mb-4 mt-2">👦</div>
+          <div className="text-6xl mb-4 mt-2 text-center flex justify-center">👦</div>
           <h1 className="text-2xl font-bold text-[#2A5C82]">Portal del Estudiante</h1>
           <p className="text-gray-500 text-sm mt-2">Ingresa al mundo de LectoTech</p>
         </div>
@@ -120,14 +141,12 @@ export default function EstudianteLoginPage() {
 
         <form onSubmit={handleAuth} className="px-8 pb-8 space-y-4">
           {authMode === 'register' && (
-            <div className="animate-in fade-in slide-in-from-top-2">
+            <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Nombres y Apellidos</label>
               <input 
-                type="text" 
-                required
-                value={nombres}
+                type="text" required value={nombres}
                 onChange={(e) => setNombres(e.target.value)}
-                className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-[#4CAF50] outline-none transition-colors"
+                className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-[#4CAF50] outline-none"
                 placeholder="Ej. Mateo el Explorador"
               />
             </div>
@@ -136,40 +155,61 @@ export default function EstudianteLoginPage() {
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1">Correo Electrónico</label>
             <input 
-              type="email" 
-              required
-              value={email}
+              type="email" required value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-[#4CAF50] outline-none transition-colors"
+              className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-[#4CAF50] outline-none"
               placeholder="estudiante@escuela.com"
             />
           </div>
 
-          <div>
+          <div className="relative">
             <label className="block text-sm font-bold text-gray-700 mb-1">Contraseña</label>
             <input 
-              type="password" 
-              required
-              value={password}
+              type={showPassword ? "text" : "password"} required value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-[#4CAF50] outline-none transition-colors"
+              className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-[#4CAF50] outline-none"
               placeholder="••••••••"
             />
+            <button 
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-10 text-gray-400 hover:text-gray-600"
+            >
+              {showPassword ? "👁️" : "🙈"}
+            </button>
           </div>
           
           {authMode === 'register' && (
-            <div className="animate-in fade-in slide-in-from-top-2">
-              <label className="block text-sm font-bold text-gray-700 mb-1">Código de la Clase</label>
-              <input 
-                type="text" 
-                required
-                value={classCode}
-                onChange={(e) => setClassCode(e.target.value.toUpperCase())}
-                className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-[#4CAF50] outline-none font-mono uppercase transition-colors"
-                placeholder="Ej. 5TO-CLASE"
-              />
-              <p className="text-xs text-gray-500 mt-2 font-medium">Ej: 5TO-CLASE, 6TO-CLASE, 7MO-CLASE.</p>
-            </div>
+            <>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Confirmar Contraseña</label>
+                <input 
+                  type={showPassword ? "text" : "password"} required value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-[#4CAF50] outline-none"
+                  placeholder="••••••••"
+                />
+              </div>
+              <div className="bg-blue-50 p-3 rounded-xl text-xs text-blue-700 space-y-1">
+                <p className="font-bold">Requisitos de contraseña:</p>
+                <ul className="list-disc pl-4">
+                  <li className={password.length >= 8 ? "text-green-600" : ""}>Mínimo 8 caracteres</li>
+                  <li className={/[A-Z]/.test(password) ? "text-green-600" : ""}>Una letra mayúscula</li>
+                  <li className={/[a-z]/.test(password) ? "text-green-600" : ""}>Una letra minúscula</li>
+                  <li className={/[0-9]/.test(password) ? "text-green-600" : ""}>Un número</li>
+                  <li className={/[!@#$%^&*(),.?":{}|<>]/.test(password) ? "text-green-600" : ""}>Un carácter especial (!@#$%)</li>
+                </ul>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Código de la Clase</label>
+                <input 
+                  type="text" required value={classCode}
+                  onChange={(e) => setClassCode(e.target.value.toUpperCase())}
+                  className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-[#4CAF50] outline-none font-mono uppercase"
+                  placeholder="Ej. 5TO-CLASE"
+                />
+              </div>
+            </>
           )}
           
           {errorMsg && <p className="text-red-500 text-sm font-bold bg-red-50 p-3 rounded-xl border border-red-100">{errorMsg}</p>}
