@@ -182,17 +182,26 @@ const MuroView = ({ mensajes, onStar, onComment, currentUserId }: { mensajes: an
                 <p className="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                 
                 {msg.media_url && (
-                  <div className="mt-6 rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+                  <div className="mt-6 rounded-2xl overflow-hidden border border-gray-100 shadow-sm group">
                     {msg.media_type === 'image' ? (
                       <img src={msg.media_url} alt="Adjunto" className="w-full max-h-96 object-cover" />
                     ) : (
-                      <a href={msg.media_url} target="_blank" rel="noreferrer" className="flex items-center gap-4 p-5 bg-gray-50 hover:bg-blue-50 transition-all group">
-                        <span className="text-3xl">📄</span>
-                        <div className="text-left">
-                          <p className="font-black text-[#2A5C82] group-hover:underline">Ver PDF Adjunto</p>
-                          <p className="text-xs text-gray-400 font-bold tracking-widest uppercase">Haz clic para abrir</p>
+                      <button 
+                        onClick={() => setSelectedBook({
+                          title: 'Lectura del Profesor',
+                          pdf_url: msg.media_url
+                        })}
+                        className="w-full flex items-center justify-between p-5 bg-blue-50 hover:bg-blue-100 transition-all group"
+                      >
+                        <div className="flex items-center gap-4 text-left">
+                          <span className="text-3xl">📖</span>
+                          <div>
+                            <p className="font-black text-[#2A5C82] group-hover:underline">Abrir Lectura Interactiva</p>
+                            <p className="text-xs text-gray-400 font-bold tracking-widest uppercase">Haz clic para leer el libro</p>
+                          </div>
                         </div>
-                      </a>
+                        <span className="bg-white p-2 rounded-xl shadow-sm group-hover:translate-x-1 transition-transform">➡️</span>
+                      </button>
                     )}
                   </div>
                 )}

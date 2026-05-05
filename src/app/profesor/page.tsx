@@ -12,6 +12,7 @@ export default function ProfesorPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'panel' | 'clases' | 'actividades' | 'mensajes' | 'perfil'>('panel');
   const [selectedMessageForDetails, setSelectedMessageForDetails] = useState<any | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const statsRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
@@ -414,13 +415,26 @@ export default function ProfesorPage() {
               </div>
             </div>
 
-            {/* TABLA DE ESTUDIANTES */}
+            {/* TABLA DE ESTUDIANTES CON BUSCADOR */}
             <div className="space-y-6">
-              <h3 className="text-xl font-black text-gray-800 flex items-center gap-2">
-                <span className="w-2 h-6 bg-[#4CAF50] rounded-full"></span>
-                Nómina de Estudiantes Registrados
-              </h3>
-              <div className="border-2 border-gray-50 rounded-3xl overflow-hidden">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <h3 className="text-xl font-black text-gray-800 flex items-center gap-2">
+                  <span className="w-2 h-6 bg-[#4CAF50] rounded-full"></span>
+                  Nómina de Estudiantes Registrados
+                </h3>
+                <div className="relative w-full md:w-72">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                  <input 
+                    type="text" 
+                    placeholder="Buscar por nombre, correo..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#4CAF50] outline-none font-bold text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="border-2 border-gray-50 rounded-3xl overflow-hidden shadow-sm">
                 <table className="w-full text-left">
                   <thead className="bg-gray-50">
                     <tr>
@@ -430,14 +444,36 @@ export default function ProfesorPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {estudiantes.length === 0 ? (
-                      <tr><td colSpan={3} className="p-8 text-center text-gray-400 font-bold italic">No hay estudiantes matriculados todavía.</td></tr>
+                    {estudiantes
+                      .filter(e => 
+                        e.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        e.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        e.clase?.toLowerCase().includes(searchTerm.toLowerCase())
+                      )
+                      .length === 0 ? (
+                      <tr><td colSpan={3} className="p-8 text-center text-gray-400 font-bold italic">No se encontraron estudiantes.</td></tr>
                     ) : (
-                      estudiantes.slice(0, 15).map(est => (
+                      estudiantes
+                        .filter(e => 
+                          e.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          e.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          e.clase?.toLowerCase().includes(searchTerm.toLowerCase())
+                        )
+                        .slice(0, 20)
+                        .map(est => (
                         <tr key={est.id} className="hover:bg-blue-50/30 transition-colors">
                           <td className="p-4 font-bold text-gray-800">{est.full_name}</td>
-                          <td className="p-4"><span className="bg-gray-100 px-3 py-1 rounded-full text-xs font-black text-gray-500">{est.clase || 'S/A'}</span></td>
-                          <td className="p-4 text-xs text-gray-400 font-medium">{est.email}</td>
+                          <td className="p-4">
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-black ${
+                              est.clase === '5TO-CLASE' ? 'bg-blue-100 text-blue-600' :
+                              est.clase === '6TO-CLASE' ? 'bg-green-100 text-green-600' :
+                              est.clase === '7MO-CLASE' ? 'bg-purple-100 text-purple-600' :
+                              'bg-gray-100 text-gray-500'
+                            }`}>
+                              {est.clase || 'S/A'}
+                            </span>
+                          </td>
+                          <td className="p-4 text-xs text-gray-400 font-bold uppercase">{est.email}</td>
                         </tr>
                       ))
                     )}
@@ -720,15 +756,28 @@ export default function ProfesorPage() {
                       {mensajesEnviados.map(msg => (
                         <div key={msg.id} className="p-6 border-2 border-gray-50 rounded-3xl bg-white shadow-sm hover:border-blue-200 transition-all">
                           <div className="flex justify-between items-start mb-3">
-                            <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${msg.target_type === 'class' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
-                              {msg.target_type === 'class' ? `🏫 Clase: ${msg.target_id}` : `👤 Privado`}
-                            </span>
+                            <div className="flex flex-col gap-1">
+                              <span className={`w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${msg.target_type === 'class' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
+                                {msg.target_type === 'class' ? `🏫 Clase: ${msg.target_id}` : `👤 Privado`}
+                              </span>
+                              <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
+                                📅 {new Date(msg.created_at).toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
                             <div className="flex gap-2">
-                              <span className="text-xs text-gray-400 font-bold">{new Date(msg.created_at).toLocaleString()}</span>
-                              <button onClick={() => handleDeleteMessage(msg.id)} className="text-red-400 hover:text-red-600 transition-colors">🗑️</button>
+                              <button 
+                                onClick={() => alert("Función de archivado próximamente. Por ahora usa eliminar.")}
+                                className="bg-gray-100 hover:bg-orange-100 text-gray-400 hover:text-orange-600 p-2 rounded-xl transition-all text-xs font-bold"
+                                title="Archivar mensaje"
+                              >
+                                📥 Ocultar
+                              </button>
+                              <button onClick={() => handleDeleteMessage(msg.id)} className="bg-gray-100 hover:bg-red-500 hover:text-white p-2 rounded-xl transition-all" title="Eliminar mensaje">
+                                🗑️
+                              </button>
                             </div>
                           </div>
-                          <p className="text-gray-800 font-medium whitespace-pre-wrap mb-4">{msg.content}</p>
+                          <p className="text-gray-800 font-medium whitespace-pre-wrap mb-4 text-sm leading-relaxed">{msg.content}</p>
                           
                           {/* INTERACCIONES EN PANEL DOCENTE */}
                           <div className="flex items-center justify-between mb-4">
