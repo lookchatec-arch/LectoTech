@@ -785,6 +785,7 @@ const MuroView = ({ mensajes, onStar, onComment, onArchive, currentUserId, setSe
 };
 
 const MensajesView = ({ mensajes, onStar, onComment, onArchive, currentUserId, setSelectedBook }: any) => {
+  const [showArchived, setShowArchived] = useState(false);
   const mensajesPrivados = mensajes.filter((m: any) => m.target_type === 'student');
 
   return (
