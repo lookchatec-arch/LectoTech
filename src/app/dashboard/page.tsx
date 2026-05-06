@@ -747,7 +747,7 @@ const QuienesSomosView = () => (
   </div>
 );
 
-const MuroView = ({ mensajes, onStar, onComment, onArchive, currentUserId, setSelectedBook }: { mensajes: any[], onStar: (id: string) => void, onComment: (id: string, content: string) => void, onArchive: (id: string) => void, currentUserId: string, setSelectedBook: any }) => {
+const MuroView = ({ mensajes, onStar, onComment, onArchive, currentUserId, setSelectedBook }: { mensajes: any[], onStar: (id: string) => void, onComment: (id: string, content: string) => void, onArchive: (id: string, currentlyArchived: boolean) => void, currentUserId: string, setSelectedBook: any }) => {
   const [showArchived, setShowArchived] = useState(false);
   const [commentInputs, setCommentInputs] = useState<{[key: string]: string}>({});
 
