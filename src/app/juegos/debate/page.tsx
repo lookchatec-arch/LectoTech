@@ -69,13 +69,13 @@ export default function DebatePage() {
                   </div>
                   <div>
                     <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Tu Postura</p>
-                    <h2 className="text-2xl font-black text-[#2A5C82]">{topics[0].sides.find(s => s.id === selectedSide)?.name}</h2>
+                    <h2 className="text-2xl font-black text-[#2A5C82]">{topics[0].sides.find((s: any) => s.id === selectedSide)?.name}</h2>
                   </div>
                </div>
 
                <h3 className="text-xl font-bold text-gray-700 text-center">Tus Argumentos Clave:</h3>
                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                 {topics[0].sides.find(s => s.id === selectedSide)?.arguments.map((arg, i) => (
+                 {topics[0].sides.find((s: any) => s.id === selectedSide)?.arguments.map((arg, i) => (
                    <div key={i} className="bg-white p-8 rounded-[2.5rem] shadow-sm border-2 border-gray-100 hover:border-[#2A5C82] transition-all text-center group">
                       <div className="text-3xl mb-4 group-hover:animate-bounce">📌</div>
                       <p className="text-lg font-black text-gray-800">{arg}</p>

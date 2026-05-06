@@ -18,7 +18,7 @@ export default function SopaPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tema = searchParams.get('tema') || 'general';
-  const PALABRAS = (TEMAS as any)[tema] || TEMAS.general;
+  const PALABRAS: string[] = (TEMAS as any)[tema] || TEMAS.general;
 
   const [grid, setGrid] = useState<string[][]>([]);
   const [encontradas, setEncontradas] = useState<string[]>([]);
@@ -112,7 +112,7 @@ export default function SopaPage() {
 
           // Verificar si coincide con alguna palabra (al derecho o al revés)
           const wordRev = word.split('').reverse().join('');
-          const foundWord = PALABRAS.find(p => p === word || p === wordRev);
+          const foundWord = PALABRAS.find((p: string) => p === word || p === wordRev);
 
           if (foundWord && !encontradas.includes(foundWord)) {
             setEncontradas([...encontradas, foundWord]);

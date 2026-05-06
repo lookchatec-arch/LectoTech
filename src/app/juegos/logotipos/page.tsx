@@ -75,8 +75,8 @@ export default function LogotiposPage() {
               <div className="flex items-center gap-4 bg-blue-50 p-6 rounded-3xl">
                 <div className="text-4xl">💡</div>
                 <p className="text-blue-800 font-bold">
-                  Estás diseñando para <strong>{brands.find(b => b.id === selectedBrand)?.name}</strong>. 
-                  Elige elementos que comuniquen su misión: <em>"{brands.find(b => b.id === selectedBrand)?.mission}"</em>
+                  Estás diseñando para <strong>{brands.find((b: any) => b.id === selectedBrand)?.name}</strong>. 
+                  Elige elementos que comuniquen su misión: <em>"{brands.find((b: any) => b.id === selectedBrand)?.mission}"</em>
                 </p>
               </div>
 
@@ -137,10 +137,10 @@ export default function LogotiposPage() {
                   <div className={`absolute inset-0 opacity-10 ${choices.color === 'Azul Eléctrico' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
                   <div className="relative z-10 space-y-4">
                     <div className="text-8xl mb-4 group-hover:scale-125 transition-transform duration-500">
-                      {brands.find(b => b.id === selectedBrand)?.icon}
+                      {brands.find((b: any) => b.id === selectedBrand)?.icon}
                     </div>
                     <h3 className={`text-5xl font-black tracking-tighter ${choices.font === 'Moderna y Recta' ? 'font-mono uppercase' : 'italic'} ${choices.color === 'Azul Eléctrico' ? 'text-blue-600' : 'text-green-600'}`}>
-                      {brands.find(b => b.id === selectedBrand)?.name}
+                      {brands.find((b: any) => b.id === selectedBrand)?.name}
                     </h3>
                   </div>
                </div>
@@ -148,7 +148,7 @@ export default function LogotiposPage() {
                <div className="max-w-md mx-auto bg-gray-50 p-6 rounded-3xl border-2 border-dashed border-gray-200">
                   <p className="text-gray-600 font-medium italic">
                     "Has elegido una tipografía <strong>{choices.font}</strong> combinada con el color <strong>{choices.color}</strong>. 
-                    Esta combinación es perfecta para representar {brands.find(b => b.id === selectedBrand)?.name}."
+                    Esta combinación es perfecta para representar {brands.find((b: any) => b.id === selectedBrand)?.name}."
                   </p>
                </div>
 

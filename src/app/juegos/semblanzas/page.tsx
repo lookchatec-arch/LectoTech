@@ -77,7 +77,7 @@ export default function SemblanzasPage() {
                    <div className="space-y-4">
                      <p className="text-rose-600 font-black uppercase text-xs tracking-widest">Pistas Recolectadas</p>
                      <ul className="space-y-2">
-                       {profiles.find(p => p.id === selectedProfile)?.clues.map((clue, i) => (
+                       {profiles.find((p: any) => p.id === selectedProfile)?.clues.map((clue, i) => (
                          <li key={i} className="flex items-center gap-3 text-gray-600 font-bold">
                            <span className="text-rose-500">📍</span> {clue}
                          </li>
@@ -88,7 +88,7 @@ export default function SemblanzasPage() {
                    <div className="bg-rose-50 p-8 rounded-3xl border-2 border-dashed border-rose-200">
                      <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Semblanza del Personaje</p>
                      <p className="text-gray-700 text-lg leading-relaxed font-medium italic">
-                       "{profiles.find(p => p.id === selectedProfile)?.description}"
+                       "{profiles.find((p: any) => p.id === selectedProfile)?.description}"
                      </p>
                    </div>
 

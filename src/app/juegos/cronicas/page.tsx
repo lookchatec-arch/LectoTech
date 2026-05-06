@@ -17,7 +17,7 @@ export default function CronicasPage() {
   ];
 
   const handleArrange = (item: any) => {
-    if (!arrangedItems.find(i => i.id === item.id)) {
+    if (!arrangedItems.find((i: any) => i.id === item.id)) {
       setArrangedItems([...arrangedItems, item]);
     }
   };
@@ -54,10 +54,10 @@ export default function CronicasPage() {
                  {items.map((item) => (
                    <button
                      key={item.id}
-                     disabled={arrangedItems.find(i => i.id === item.id)}
+                     disabled={arrangedItems.find((i: any) => i.id === item.id)}
                      onClick={() => handleArrange(item)}
                      className={`p-6 rounded-2xl border-2 transition-all text-left flex justify-between items-center
-                       ${arrangedItems.find(i => i.id === item.id) ? 'opacity-30 bg-gray-50' : 'bg-white border-gray-100 hover:border-amber-400 hover:shadow-lg'}
+                       ${arrangedItems.find((i: any) => i.id === item.id) ? 'opacity-30 bg-gray-50' : 'bg-white border-gray-100 hover:border-amber-400 hover:shadow-lg'}
                      `}
                    >
                      <p className="font-bold text-gray-700">{item.text}</p>

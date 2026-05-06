@@ -75,10 +75,10 @@ export default function RadioPage() {
                </div>
 
                <div className="space-y-2">
-                 <p className="text-red-500 font-black uppercase text-xs tracking-[0.2em]">Formato Radial: {stations.find(s => s.name === currentStation)?.format}</p>
+                 <p className="text-red-500 font-black uppercase text-xs tracking-[0.2em]">Formato Radial: {stations.find((s: any) => s.name === currentStation)?.format}</p>
                  <h3 className="text-2xl font-black text-white">{currentStation}</h3>
                  <p className="text-gray-400 text-sm italic max-w-xs mx-auto">
-                   "{stations.find(s => s.name === currentStation)?.description}"
+                   "{stations.find((s: any) => s.name === currentStation)?.description}"
                  </p>
                </div>
 

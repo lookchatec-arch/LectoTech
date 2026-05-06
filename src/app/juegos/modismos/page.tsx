@@ -52,20 +52,20 @@ export default function ModismosPage() {
               {selectedModismo ? (
                 <div className="bg-purple-50 p-10 rounded-[3rem] border-2 border-purple-100 w-full animate-in zoom-in duration-500 space-y-8 text-center relative overflow-hidden">
                   <div className="absolute -top-10 -right-10 text-9xl opacity-5 pointer-events-none">
-                    {modismos.find(m => m.id === selectedModismo)?.icon}
+                    {modismos.find((m: any) => m.id === selectedModismo)?.icon}
                   </div>
                   
                   <div className="space-y-2">
                     <p className="text-purple-600 font-black uppercase text-xs tracking-widest">Significado Real</p>
                     <h3 className="text-3xl font-black text-gray-800">
-                      "{modismos.find(m => m.id === selectedModismo)?.meaning}"
+                      "{modismos.find((m: any) => m.id === selectedModismo)?.meaning}"
                     </h3>
                   </div>
 
                   <div className="bg-white p-6 rounded-2xl shadow-sm border border-purple-100">
                     <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Curiosidad / Origen</p>
                     <p className="text-gray-600 font-medium italic leading-relaxed">
-                      {modismos.find(m => m.id === selectedModismo)?.origin}
+                      {modismos.find((m: any) => m.id === selectedModismo)?.origin}
                     </p>
                   </div>
 

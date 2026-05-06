@@ -86,7 +86,7 @@ export default function ReglamentosPage() {
                   <h3 className="text-xl font-black text-indigo-600 uppercase tracking-widest text-center">MI COMPROMISO DIGITAL</h3>
                   <div className="space-y-4 text-gray-600 font-medium italic">
                     {choices.map((id, i) => {
-                      const rule = rules.find(r => r.id === id);
+                      const rule = rules.find((r: any) => r.id === id);
                       return (
                         <div key={i} className="flex gap-3">
                           <span className="text-indigo-500 font-black">●</span>
