@@ -940,12 +940,23 @@ export default function DashboardPage() {
   const fetchProfile = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
       
+      // Si el usuario es estudiante pero no tiene perfil, es que ha sido eliminado
+      if (profileError && profileError.code === 'PGRST116') {
+        const isStudent = user.user_metadata?.role === 'estudiante';
+        if (isStudent) {
+          alert("🚨 TU USUARIO HA SIDO ELIMINADO.\n\nPuedes registrarte nuevamente con un nuevo código de clase.");
+          await supabase.auth.signOut();
+          router.push('/estudiante?error=account_deleted');
+          return;
+        }
+      }
+
       const info = {
         id: user.id,
         nombre: profile?.full_name || user.user_metadata?.full_name || 'Estudiante',
@@ -990,14 +1001,29 @@ export default function DashboardPage() {
       .eq('is_archived', false) // NO mostrar archivados
       .or(`and(target_type.eq.class,target_id.eq.${claseCode}),and(target_type.eq.student,target_id.eq.${userId})`)
       .order('created_at', { ascending: false });
-    if (data) setMensajes(data as any);
+    
+    if (data) {
+      // Filtrar los que el estudiante ocultó localmente
+      const hiddenIds = JSON.parse(localStorage.getItem(`hidden_msgs_${userId}`) || '[]');
+      const filtered = data.filter((m: any) => !hiddenIds.includes(m.id));
+      setMensajes(filtered as any);
+    }
   };
 
   const handleArchiveMessage = async (msgId: string) => {
-    // Para el estudiante, "archivar" es solo ocultar localmente.
-    // Como no queremos afectar a toda la clase, lo ideal sería una tabla intermedia,
-    // pero por ahora lo ocultaremos de la vista actual.
-    setMensajes(prev => prev.filter((m: any) => m.id !== msgId));
+    const msg = mensajes.find(m => m.id === msgId);
+    if (!msg) return;
+
+    if (msg.target_type === 'student') {
+      // Mensaje privado: Archivar en DB
+      await supabase.from('messages').update({ is_archived: true }).eq('id', msgId);
+      setMensajes(prev => prev.filter(m => m.id !== msgId));
+    } else {
+      // Mensaje de clase: Ocultar localmente
+      const hiddenIds = JSON.parse(localStorage.getItem(`hidden_msgs_${estudianteInfo.id}`) || '[]');
+      localStorage.setItem(`hidden_msgs_${estudianteInfo.id}`, JSON.stringify([...hiddenIds, msgId]));
+      setMensajes(prev => prev.filter(m => m.id !== msgId));
+    }
     alert("Mensaje ocultado de tu muro.");
   };
 

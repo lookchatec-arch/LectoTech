@@ -181,30 +181,85 @@ export default function ProfesorPage() {
 
 
   const handleDeleteMessage = async (msgId: string) => {
-    if (!confirm("¿Seguro que quieres ELIMINAR este mensaje para todos?")) return;
-    const { error } = await supabase.from('messages').delete().eq('id', msgId);
-    if (error) alert("Error: " + error.message);
-    else fetchMensajes(perfil.id);
+    if (!confirm("¿Seguro que quieres ELIMINAR este mensaje para todos definitivamente? Esta acción no se puede deshacer.")) return;
+    
+    setLoading(true);
+    try {
+      // 1. Eliminar estrellas relacionadas
+      await supabase.from('message_stars').delete().eq('message_id', msgId);
+      // 2. Eliminar comentarios relacionados
+      await supabase.from('message_comments').delete().eq('message_id', msgId);
+      // 3. Eliminar el mensaje
+      const { error } = await supabase.from('messages').delete().eq('id', msgId);
+      
+      if (error) throw error;
+      alert("¡Mensaje eliminado permanentemente!");
+      fetchMensajes(perfil.id);
+    } catch (err: any) {
+      alert("Error eliminando mensaje: " + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleArchiveMessage = async (msgId: string) => {
+  const handleArchiveMessage = async (msg: any) => {
     const { error } = await supabase
       .from('messages')
-      .update({ is_archived: !showArchived })
-      .eq('id', msgId);
+      .update({ is_archived: !msg.is_archived })
+      .eq('id', msg.id);
     
     if (error) alert("Error: " + error.message);
     else {
-      alert(showArchived ? "Mensaje restaurado." : "Mensaje archivado.");
+      alert(!msg.is_archived ? "Mensaje archivado correctamente." : "Mensaje restaurado a la vista principal.");
       fetchMensajes(perfil.id);
     }
   };
 
-  const handleDeleteBook = async (bookId: string) => {
-    if (!confirm("¿Seguro que quieres eliminar este libro de la biblioteca?")) return;
-    const { error } = await supabase.from('library_books').delete().eq('id', bookId);
-    if (error) alert("Error: " + error.message);
-    else fetchLibros(perfil.id);
+  const handleDeleteBook = async (book: any) => {
+    if (!confirm(`¿Seguro que quieres eliminar "${book.title}" definitivamente?`)) return;
+    
+    setLoading(true);
+    try {
+      // Si el libro es un archivo subido, intentar borrarlo del storage
+      if (book.pdf_url.includes('storage/v1/object/public/biblioteca/')) {
+        const filePath = book.pdf_url.split('/biblioteca/').pop();
+        if (filePath) {
+          await supabase.storage.from('biblioteca').remove([filePath]);
+        }
+      }
+
+      const { error } = await supabase.from('library_books').delete().eq('id', book.id);
+      if (error) throw error;
+      
+      alert("¡Libro eliminado con éxito!");
+      fetchLibros(perfil.id);
+    } catch (err: any) {
+      alert("Error: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteStudent = async (student: any) => {
+    if (!confirm(`🚨 ATENCIÓN: ¿Seguro que quieres ELIMINAR al estudiante ${student.full_name}? \n\nEsta acción borrará su progreso y perfil definitivamente.`)) return;
+    
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', student.id);
+      
+      if (error) throw error;
+      
+      alert("¡Estudiante eliminado correctamente!");
+      // Actualizar lista local
+      setEstudiantes(prev => prev.filter(e => e.id !== student.id));
+    } catch (err: any) {
+      alert("Error al eliminar estudiante: " + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleUploadBook = async (e: React.FormEvent) => {
@@ -572,6 +627,14 @@ export default function ProfesorPage() {
                                 <option value="6TO-CLASE">6to Básica</option>
                                 <option value="7MO-CLASE">7mo Básica</option>
                               </select>
+                              
+                              <button 
+                                onClick={() => handleDeleteStudent(est)}
+                                className="p-2 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all text-xs"
+                                title="Eliminar Estudiante"
+                              >
+                                🗑️
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -691,7 +754,7 @@ export default function ProfesorPage() {
                             >
                               👁️
                             </button>
-                            <button onClick={() => handleDeleteBook(lib.id)} className="bg-gray-100 hover:bg-red-500 hover:text-white p-3 rounded-xl transition-all">
+                            <button onClick={() => handleDeleteBook(lib)} className="bg-gray-100 hover:bg-red-500 hover:text-white p-3 rounded-xl transition-all">
                               🗑️
                             </button>
                           </div>
@@ -824,11 +887,11 @@ export default function ProfesorPage() {
                             </div>
                             <div className="flex gap-2">
                               <button 
-                                onClick={() => handleArchiveMessage(msg.id)}
-                                className={`p-2 rounded-xl transition-all text-xs font-black uppercase ${showArchived ? 'bg-green-100 text-green-600 hover:bg-green-200' : 'bg-gray-100 text-gray-400 hover:bg-orange-100 hover:text-orange-600'}`}
-                                title={showArchived ? "Restaurar" : "Archivar"}
+                                onClick={() => handleArchiveMessage(msg)}
+                                className={`p-2 rounded-xl transition-all text-xs font-black uppercase ${msg.is_archived ? 'bg-green-100 text-green-600 hover:bg-green-200' : 'bg-gray-100 text-gray-400 hover:bg-orange-100 hover:text-orange-600'}`}
+                                title={msg.is_archived ? "Restaurar" : "Archivar"}
                               >
-                                {showArchived ? 'Restaurar' : 'Ocultar'}
+                                {msg.is_archived ? 'Restaurar' : 'Ocultar'}
                               </button>
                               <button onClick={() => handleDeleteMessage(msg.id)} className="bg-gray-100 hover:bg-red-500 hover:text-white p-2 rounded-xl transition-all" title="Eliminar mensaje">
                                 🗑️
