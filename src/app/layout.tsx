@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   description: "Plataforma Integral para el Fortalecimiento de la Lectoescritura Digital. Aprende, juega y mejora tu comprensión lectora.",
   icons: {
     icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
   },
 };
 
