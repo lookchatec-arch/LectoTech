@@ -83,7 +83,18 @@ export default function ProfesorLoginPage() {
         });
 
         if (error) throw error;
-        if (data.user) router.push('/profesor');
+
+        if (data.user) {
+          const role = data.user.user_metadata?.role;
+          if (role !== 'profesor') {
+            await supabase.auth.signOut();
+            setErrorMsg("Esta cuenta pertenece a un Estudiante. Por favor, ingresa por el portal correspondiente.");
+            setLoading(false);
+            return;
+          }
+          router.push('/profesor');
+        }
+
       }
     } catch (err: any) {
       setErrorMsg(err.message === "Failed to fetch" ? "Error de conexión: Verifica las credenciales en el servidor." : err.message);

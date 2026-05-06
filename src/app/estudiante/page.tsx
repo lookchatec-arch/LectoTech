@@ -97,10 +97,18 @@ export default function EstudianteLoginPage() {
         if (error) throw error;
 
         if (data.user) {
+          const role = data.user.user_metadata?.role;
+          if (role !== 'estudiante') {
+            await supabase.auth.signOut();
+            setErrorMsg("Esta cuenta pertenece a un Profesor. Por favor, ingresa por el portal docente.");
+            setLoading(false);
+            return;
+          }
           const nombreUser = data.user.user_metadata?.full_name || 'Estudiante';
           const gradoUser = data.user.user_metadata?.grado || '5';
           router.push(`/dashboard?estudiante=${encodeURIComponent(nombreUser)}&grado=${gradoUser}`);
         }
+
       }
     } catch (err: any) {
       setErrorMsg(err.message === "Failed to fetch" ? "Error de conexión: Verifica las credenciales en el servidor." : err.message);
