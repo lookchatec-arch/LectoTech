@@ -756,18 +756,18 @@ const MuroView = ({ mensajes, onStar, onComment, onArchive, currentUserId, setSe
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-[#2A5C82]">📢 Muro de la Clase</h2>
+        <h2 className="text-2xl font-bold text-[#2A5C82]">{showArchived ? '📦 Mensajes Ocultos' : '📢 Muro de la Clase'}</h2>
         <button 
           onClick={() => setShowArchived(!showArchived)}
-          className="text-xs font-black uppercase text-gray-400 hover:text-[#2A5C82] transition-colors"
+          className={`px-4 py-2 rounded-xl font-black text-[10px] uppercase transition-all ${showArchived ? 'bg-blue-600 text-white shadow-md' : 'bg-white border-2 border-gray-100 text-gray-400'}`}
         >
-          {showArchived ? '📁 Ver Recientes' : '📦 Ver Archivados'}
+          {showArchived ? 'Ver Recientes' : 'Ver Archivados'}
         </button>
       </div>
 
       {mensajesFiltrados.length === 0 ? (
         <div className="bg-white rounded-3xl p-12 shadow-sm border border-gray-100 text-center">
-          <p className="text-gray-400 font-bold">No hay mensajes de la clase.</p>
+          <p className="text-gray-400 font-bold">{showArchived ? 'No tienes mensajes archivados.' : 'No hay mensajes nuevos en el muro.'}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
@@ -775,6 +775,7 @@ const MuroView = ({ mensajes, onStar, onComment, onArchive, currentUserId, setSe
              <MensajeCard 
                key={msg.id} msg={msg} onStar={onStar} onComment={onComment} 
                onArchive={onArchive} currentUserId={currentUserId} setSelectedBook={setSelectedBook}
+               isArchivedView={showArchived}
              />
           ))}
         </div>
@@ -788,10 +789,18 @@ const MensajesView = ({ mensajes, onStar, onComment, onArchive, currentUserId, s
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
-      <h2 className="text-2xl font-bold text-[#2A5C82]">✉️ Mis Mensajes Privados</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-[#2A5C82]">{showArchived ? '📦 Privados Archivados' : '✉️ Mis Mensajes Privados'}</h2>
+        <button 
+          onClick={() => setShowArchived(!showArchived)}
+          className={`px-4 py-2 rounded-xl font-black text-[10px] uppercase transition-all ${showArchived ? 'bg-blue-600 text-white shadow-md' : 'bg-white border-2 border-gray-100 text-gray-400'}`}
+        >
+          {showArchived ? 'Ver Recientes' : 'Ver Archivados'}
+        </button>
+      </div>
       {mensajesPrivados.length === 0 ? (
         <div className="bg-white rounded-3xl p-12 shadow-sm border border-gray-100 text-center">
-          <p className="text-gray-400 font-bold">No tienes mensajes directos del profesor.</p>
+          <p className="text-gray-400 font-bold">{showArchived ? 'No tienes mensajes privados archivados.' : 'No tienes mensajes directos del profesor.'}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
@@ -799,6 +808,7 @@ const MensajesView = ({ mensajes, onStar, onComment, onArchive, currentUserId, s
              <MensajeCard 
                key={msg.id} msg={msg} onStar={onStar} onComment={onComment} 
                onArchive={onArchive} currentUserId={currentUserId} setSelectedBook={setSelectedBook}
+               isArchivedView={showArchived}
              />
           ))}
         </div>
@@ -807,7 +817,7 @@ const MensajesView = ({ mensajes, onStar, onComment, onArchive, currentUserId, s
   );
 };
 
-const MensajeCard = ({ msg, onStar, onComment, onArchive, currentUserId, setSelectedBook }: any) => {
+const MensajeCard = ({ msg, onStar, onComment, onArchive, currentUserId, setSelectedBook, isArchivedView }: any) => {
   const [commentInput, setCommentInput] = useState('');
   const hasStarred = msg.message_stars?.some((s: any) => s.user_id === currentUserId);
 
@@ -826,10 +836,10 @@ const MensajeCard = ({ msg, onStar, onComment, onArchive, currentUserId, setSele
             <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Privado</span>
           )}
           <button 
-            onClick={() => onArchive(msg.id)}
-            className="bg-gray-100 hover:bg-orange-50 text-gray-400 hover:text-orange-600 px-3 py-1 rounded-full text-[10px] font-black uppercase transition-all"
+            onClick={() => onArchive(msg.id, isArchivedView)}
+            className={`px-3 py-1 rounded-full text-[10px] font-black uppercase transition-all ${isArchivedView ? 'bg-green-100 text-green-600 hover:bg-green-200' : 'bg-gray-100 hover:bg-orange-50 text-gray-400 hover:text-orange-600'}`}
           >
-            Ocultar
+            {isArchivedView ? 'Desarchivar' : 'Ocultar'}
           </button>
         </div>
       </div>
@@ -932,10 +942,11 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [selectedBook, setSelectedBook] = useState<any>(null);
   const [isPlanOpen, setIsPlanOpen] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [showArchived]);
 
   const fetchProfile = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -998,33 +1009,61 @@ export default function DashboardPage() {
         message_stars(user_id),
         message_comments(*)
       `)
-      .eq('is_archived', false) // NO mostrar archivados
       .or(`and(target_type.eq.class,target_id.eq.${claseCode}),and(target_type.eq.student,target_id.eq.${userId})`)
       .order('created_at', { ascending: false });
     
     if (data) {
-      // Filtrar los que el estudiante ocultó localmente
       const hiddenIds = JSON.parse(localStorage.getItem(`hidden_msgs_${userId}`) || '[]');
-      const filtered = data.filter((m: any) => !hiddenIds.includes(m.id));
+      
+      // Filtrar según el modo (Archivados o Recientes)
+      const filtered = data.filter((m: any) => {
+        const isHiddenLocally = hiddenIds.includes(m.id);
+        const isArchivedInDB = m.is_archived === true;
+        
+        if (showArchived) {
+          // En vista de archivados: mostramos los que están en DB como archivados O los que ocultamos localmente
+          return isArchivedInDB || isHiddenLocally;
+        } else {
+          // En vista normal: ocultamos ambos
+          return !isArchivedInDB && !isHiddenLocally;
+        }
+      });
+
       setMensajes(filtered as any);
     }
   };
 
-  const handleArchiveMessage = async (msgId: string) => {
+  const handleArchiveMessage = async (msgId: string, currentlyArchived: boolean) => {
     const msg = mensajes.find(m => m.id === msgId);
-    if (!msg) return;
+    // Si no está en la lista actual, puede ser que estemos en vista archivados, lo buscamos en el pool original si fuera necesario, 
+    // pero el pool 'mensajes' ya contiene lo filtrado.
 
-    if (msg.target_type === 'student') {
-      // Mensaje privado: Archivar en DB
-      await supabase.from('messages').update({ is_archived: true }).eq('id', msgId);
-      setMensajes(prev => prev.filter(m => m.id !== msgId));
+    if (msg?.target_type === 'student') {
+      // Mensaje privado: Actualizar en DB
+      const { error } = await supabase
+        .from('messages')
+        .update({ is_archived: !currentlyArchived })
+        .eq('id', msgId);
+      
+      if (error) {
+        alert("Error: " + error.message);
+        return;
+      }
     } else {
-      // Mensaje de clase: Ocultar localmente
+      // Mensaje de clase: Usar localStorage
       const hiddenIds = JSON.parse(localStorage.getItem(`hidden_msgs_${estudianteInfo.id}`) || '[]');
-      localStorage.setItem(`hidden_msgs_${estudianteInfo.id}`, JSON.stringify([...hiddenIds, msgId]));
-      setMensajes(prev => prev.filter(m => m.id !== msgId));
+      if (currentlyArchived) {
+        // Desarchivar: quitar de la lista de ocultos
+        const newIds = hiddenIds.filter((id: string) => id !== msgId);
+        localStorage.setItem(`hidden_msgs_${estudianteInfo.id}`, JSON.stringify(newIds));
+      } else {
+        // Archivar: añadir a la lista
+        localStorage.setItem(`hidden_msgs_${estudianteInfo.id}`, JSON.stringify([...hiddenIds, msgId]));
+      }
     }
-    alert("Mensaje ocultado de tu muro.");
+    
+    alert(currentlyArchived ? "Mensaje restaurado." : "Mensaje ocultado de tu muro.");
+    fetchMensajes(estudianteInfo.id, (estudianteInfo as any).clase);
   };
 
   const handleAddStar = async (msgId: string) => {

@@ -43,7 +43,7 @@ export default function ProfesorPage() {
 
   useEffect(() => {
     fetchUserData();
-  }, [activeTab]);
+  }, [activeTab, showArchived]); // Refrescar cuando cambie la pestaña o el filtro de archivados
 
   useEffect(() => {
     if (perfil.id) fetchMensajes(perfil.id);
@@ -185,23 +185,26 @@ export default function ProfesorPage() {
     
     setLoading(true);
     try {
-      // 1. Eliminar estrellas relacionadas primero (por si no hay cascade)
+      // 1. Eliminar estrellas y comentarios primero
       await supabase.from('message_stars').delete().eq('message_id', msgId);
-      // 2. Eliminar comentarios relacionados
       await supabase.from('message_comments').delete().eq('message_id', msgId);
       
-      // 3. Eliminar el mensaje
-      const { error, count } = await supabase.from('messages').delete().eq('id', msgId);
+      // 2. Eliminar el mensaje y CONFIRMAR que se borró
+      const { error, data } = await supabase
+        .from('messages')
+        .delete()
+        .eq('id', msgId)
+        .select(); // El .select() es clave para confirmar el borrado
       
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error("No se pudo borrar el registro. Verifica tus permisos.");
 
-      // ACTUALIZACIÓN INMEDIATA DEL ESTADO (Optimistic UI)
+      // ACTUALIZACIÓN INMEDIATA DEL ESTADO
       setMensajesEnviados(prev => prev.filter(m => m.id !== msgId));
       alert("¡Mensaje eliminado permanentemente de la plataforma!");
     } catch (err: any) {
       alert("Error al eliminar: " + err.message);
-      // Recargar por si acaso
-      if (perfil.id) fetchMensajes(perfil.id);
+      fetchMensajes(perfil.id);
     } finally {
       setLoading(false);
     }
@@ -209,16 +212,19 @@ export default function ProfesorPage() {
 
   const handleArchiveMessage = async (msg: any) => {
     try {
-      const { error } = await supabase
+      const newStatus = !msg.is_archived;
+      const { error, data } = await supabase
         .from('messages')
-        .update({ is_archived: !msg.is_archived })
-        .eq('id', msg.id);
+        .update({ is_archived: newStatus })
+        .eq('id', msg.id)
+        .select();
       
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error("No se pudo actualizar el estado del mensaje.");
       
-      // Actualización inmediata: lo quitamos de la vista actual (ya sea archivado o reciente)
+      // Quitar de la vista actual
       setMensajesEnviados(prev => prev.filter(m => m.id !== msg.id));
-      alert(!msg.is_archived ? "Mensaje archivado (oculto para alumnos)." : "Mensaje restaurado a la vista principal.");
+      alert(newStatus ? "Mensaje movido al baúl de archivados." : "Mensaje restaurado a la vista principal.");
     } catch (err: any) {
       alert("Error: " + err.message);
     }
@@ -229,18 +235,21 @@ export default function ProfesorPage() {
     
     setLoading(true);
     try {
-      // Borrar del Storage si aplica
+      // Borrar del Storage
       if (book.pdf_url && book.pdf_url.includes('/biblioteca/')) {
         const filePath = book.pdf_url.split('/biblioteca/').pop();
-        if (filePath) {
-          await supabase.storage.from('biblioteca').remove([filePath]);
-        }
+        if (filePath) await supabase.storage.from('biblioteca').remove([filePath]);
       }
 
-      const { error } = await supabase.from('library_books').delete().eq('id', book.id);
+      const { error, data } = await supabase
+        .from('library_books')
+        .delete()
+        .eq('id', book.id)
+        .select();
+        
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error("No se pudo eliminar el libro de la base de datos.");
       
-      // Actualización inmediata
       setLibrosAsignados(prev => prev.filter(b => b.id !== book.id));
       alert("¡Libro eliminado definitivamente!");
     } catch (err: any) {
@@ -251,20 +260,21 @@ export default function ProfesorPage() {
   };
 
   const handleDeleteStudent = async (student: any) => {
-    if (!confirm(`🚨 ACCIÓN CRÍTICA: ¿Estás seguro de eliminar a ${student.full_name}? \n\nEsto borrará su perfil y no podrá acceder al sistema hasta registrarse de nuevo.`)) return;
+    if (!confirm(`🚨 ACCIÓN CRÍTICA: ¿Estás seguro de eliminar a ${student.full_name}?`)) return;
     
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('profiles')
         .delete()
-        .eq('id', student.id);
+        .eq('id', student.id)
+        .select();
       
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error("No se pudo eliminar el perfil del estudiante.");
       
-      // Actualización inmediata
       setEstudiantes(prev => prev.filter(e => e.id !== student.id));
-      alert("¡Estudiante eliminado de la base de datos!");
+      alert("¡Estudiante eliminado correctamente!");
     } catch (err: any) {
       alert("Error: " + err.message);
     } finally {
