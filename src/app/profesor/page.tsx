@@ -181,29 +181,43 @@ export default function ProfesorPage() {
 
 
   const handleDeleteMessage = async (msgId: string) => {
-    if (!confirm("¿Seguro que quieres ELIMINAR este mensaje para todos definitivamente? Esta acción no se puede deshacer.")) return;
+    if (!confirm("¿Seguro que quieres ELIMINAR este mensaje para todos definitivamente?")) return;
     
     setLoading(true);
     try {
-      // 1. Eliminar estrellas y comentarios primero
-      await supabase.from('message_stars').delete().eq('message_id', msgId);
-      await supabase.from('message_comments').delete().eq('message_id', msgId);
+      // 1. Intentar limpiar interacciones (estrellas y comentarios)
+      // No lanzamos error aquí por si no hay ninguna, pero registramos si algo falla
+      const { error: starErr } = await supabase.from('message_stars').delete().eq('message_id', msgId);
+      const { error: commErr } = await supabase.from('message_comments').delete().eq('message_id', msgId);
       
-      // 2. Eliminar el mensaje y CONFIRMAR que se borró
-      const { error, data } = await supabase
+      if (starErr) console.warn("Error al limpiar estrellas:", starErr);
+      if (commErr) console.warn("Error al limpiar comentarios:", commErr);
+
+      // 2. Eliminar el mensaje principal
+      const { error, data, status } = await supabase
         .from('messages')
         .delete()
         .eq('id', msgId)
-        .select(); // El .select() es clave para confirmar el borrado
+        .select();
       
-      if (error) throw error;
-      if (!data || data.length === 0) throw new Error("No se pudo borrar el registro. Verifica tus permisos.");
+      if (error) {
+        // Error de llave foránea (posibles dependencias no borradas)
+        if (error.code === '23503') {
+           throw new Error("No se puede eliminar el mensaje porque tiene comentarios o reacciones de otros alumnos que la base de datos protege. Prueba archivándolo.");
+        }
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        throw new Error(`La base de datos no permitió el borrado (Código: ${status}). Esto suele ser por falta de permisos 'DELETE' en Supabase para tu usuario.`);
+      }
 
       // ACTUALIZACIÓN INMEDIATA DEL ESTADO
       setMensajesEnviados(prev => prev.filter(m => m.id !== msgId));
-      alert("¡Mensaje eliminado permanentemente de la plataforma!");
+      alert("¡Mensaje eliminado permanentemente!");
     } catch (err: any) {
-      alert("Error al eliminar: " + err.message);
+      alert("Error Crítico: " + (err.message || "Error desconocido en el servidor"));
+      console.error("Delete Error Context:", err);
       fetchMensajes(perfil.id);
     } finally {
       setLoading(false);
@@ -220,22 +234,20 @@ export default function ProfesorPage() {
         .select();
       
       if (error) throw error;
-      if (!data || data.length === 0) throw new Error("No se pudo actualizar el estado del mensaje.");
+      if (!data || data.length === 0) throw new Error("No se pudo actualizar el estado. Verifica tu conexión o permisos.");
       
-      // Quitar de la vista actual
       setMensajesEnviados(prev => prev.filter(m => m.id !== msg.id));
-      alert(newStatus ? "Mensaje movido al baúl de archivados." : "Mensaje restaurado a la vista principal.");
+      alert(newStatus ? "Mensaje archivado (oculto)." : "Mensaje restaurado.");
     } catch (err: any) {
       alert("Error: " + err.message);
     }
   };
 
   const handleDeleteBook = async (book: any) => {
-    if (!confirm(`¿Seguro que quieres eliminar "${book.title}" definitivamente de la biblioteca?`)) return;
+    if (!confirm(`¿Seguro que quieres eliminar "${book.title}"?`)) return;
     
     setLoading(true);
     try {
-      // Borrar del Storage
       if (book.pdf_url && book.pdf_url.includes('/biblioteca/')) {
         const filePath = book.pdf_url.split('/biblioteca/').pop();
         if (filePath) await supabase.storage.from('biblioteca').remove([filePath]);
@@ -248,10 +260,10 @@ export default function ProfesorPage() {
         .select();
         
       if (error) throw error;
-      if (!data || data.length === 0) throw new Error("No se pudo eliminar el libro de la base de datos.");
+      if (!data || data.length === 0) throw new Error("No se pudo eliminar de la base de datos. Verifica permisos.");
       
       setLibrosAsignados(prev => prev.filter(b => b.id !== book.id));
-      alert("¡Libro eliminado definitivamente!");
+      alert("¡Libro eliminado!");
     } catch (err: any) {
       alert("Error: " + err.message);
     } finally {
@@ -260,7 +272,7 @@ export default function ProfesorPage() {
   };
 
   const handleDeleteStudent = async (student: any) => {
-    if (!confirm(`🚨 ACCIÓN CRÍTICA: ¿Estás seguro de eliminar a ${student.full_name}?`)) return;
+    if (!confirm(`¿Eliminar perfil de ${student.full_name}?`)) return;
     
     setLoading(true);
     try {
@@ -271,10 +283,10 @@ export default function ProfesorPage() {
         .select();
       
       if (error) throw error;
-      if (!data || data.length === 0) throw new Error("No se pudo eliminar el perfil del estudiante.");
+      if (!data || data.length === 0) throw new Error("No se pudo eliminar el perfil. Es posible que el servidor restrinja esta acción.");
       
       setEstudiantes(prev => prev.filter(e => e.id !== student.id));
-      alert("¡Estudiante eliminado correctamente!");
+      alert("¡Estudiante eliminado!");
     } catch (err: any) {
       alert("Error: " + err.message);
     } finally {
