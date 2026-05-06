@@ -3,15 +3,23 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-const PALABRAS = ['LECTURA', 'VERBO', 'SINTAXIS', 'FONEMA', 'POESIA'];
+const TEMAS = {
+  nanas: ['ARRULLO', 'CUNA', 'SUEÑO', 'NANA', 'DUERME', 'CANTO', 'LUNA', 'NOCHE'],
+  general: ['LECTURA', 'VERBO', 'SINTAXIS', 'FONEMA', 'POESIA']
+};
+
 const GRID_SIZE = 10;
 
 type Point = { r: number, c: number };
 
 export default function SopaPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const tema = searchParams.get('tema') || 'general';
+  const PALABRAS = (TEMAS as any)[tema] || TEMAS.general;
+
   const [grid, setGrid] = useState<string[][]>([]);
   const [encontradas, setEncontradas] = useState<string[]>([]);
   const [seleccionInicio, setSeleccionInicio] = useState<Point | null>(null);

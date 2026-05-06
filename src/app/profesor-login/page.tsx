@@ -239,15 +239,6 @@ export default function ProfesorLoginPage() {
             {loading ? 'Procesando...' : (authMode === 'login' ? 'Ingresar al Panel' : 'Crear Cuenta Docente')}
           </Button>
 
-          <div className="pt-6 border-t border-gray-100 mt-6">
-            <Button 
-              type="button"
-              onClick={() => router.push('/profesor')}
-              className="w-full text-sm py-4 shadow-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl flex items-center justify-center gap-2 font-bold"
-            >
-              🧪 Entrar como Versión Desarrollo
-            </Button>
-          </div>
         </form>
       </div>
     </div>

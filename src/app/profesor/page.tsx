@@ -4,8 +4,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import { supabase } from '@/lib/supabaseClient';
 
 export default function ProfesorPage() {
@@ -17,6 +15,7 @@ export default function ProfesorPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const statsRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
+  const [selectedBook, setSelectedBook] = useState<any>(null);
   
   // Mensajes State
   const [msgTargetType, setMsgTargetType] = useState<'class' | 'student'>('class');
@@ -40,7 +39,7 @@ export default function ProfesorPage() {
 
   // Libros y Actividades State
   const [librosAsignados, setLibrosAsignados] = useState<any[]>([]);
-  const [nuevoLibro, setNuevoLibro] = useState({ titulo: '', claseDestino: '5TO-CLASE', archivo: null as File | null });
+  const [nuevoLibro, setNuevoLibro] = useState({ titulo: '', claseDestino: '5TO-CLASE', archivo: null as File | null, metodo: 'archivo' as 'archivo' | 'link', linkUrl: '' });
 
   useEffect(() => {
     fetchUserData();
@@ -191,12 +190,12 @@ export default function ProfesorPage() {
   const handleArchiveMessage = async (msgId: string) => {
     const { error } = await supabase
       .from('messages')
-      .update({ is_archived: true })
+      .update({ is_archived: !showArchived })
       .eq('id', msgId);
     
     if (error) alert("Error: " + error.message);
     else {
-      alert("Mensaje archivado (oculto de la lista principal).");
+      alert(showArchived ? "Mensaje restaurado." : "Mensaje archivado.");
       fetchMensajes(perfil.id);
     }
   };
@@ -210,30 +209,49 @@ export default function ProfesorPage() {
 
   const handleUploadBook = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nuevoLibro.archivo || !nuevoLibro.titulo) return;
+    if (!nuevoLibro.titulo) return;
 
     setLoading(true);
-    const file = nuevoLibro.archivo;
-    const filePath = `books/${Date.now()}-${file.name}`;
-    const { error: uploadError } = await supabase.storage.from('biblioteca').upload(filePath, file);
+    let publicUrl = '';
 
-    if (uploadError) {
-      alert("Error subiendo PDF: " + uploadError.message);
-    } else {
-      const { data: { publicUrl } } = supabase.storage.from('biblioteca').getPublicUrl(filePath);
-      const { error: dbError } = await supabase.from('library_books').insert({
-        teacher_id: perfil.id,
-        class_code: nuevoLibro.claseDestino,
-        title: nuevoLibro.titulo,
-        pdf_url: publicUrl
-      });
-
-      if (dbError) alert("Error guardando en BD: " + dbError.message);
-      else {
-        alert("¡Libro asignado con éxito!");
-        setNuevoLibro({ ...nuevoLibro, titulo: '', archivo: null });
-        fetchLibros(perfil.id);
+    if (nuevoLibro.metodo === 'archivo') {
+      if (!nuevoLibro.archivo) {
+        alert("Por favor selecciona un archivo PDF");
+        setLoading(false);
+        return;
       }
+      const file = nuevoLibro.archivo;
+      const filePath = `books/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage.from('biblioteca').upload(filePath, file);
+
+      if (uploadError) {
+        alert("Error subiendo PDF: " + uploadError.message);
+        setLoading(false);
+        return;
+      }
+      const { data: { publicUrl: url } } = supabase.storage.from('biblioteca').getPublicUrl(filePath);
+      publicUrl = url;
+    } else {
+      if (!nuevoLibro.linkUrl) {
+        alert("Por favor ingresa un enlace válido");
+        setLoading(false);
+        return;
+      }
+      publicUrl = nuevoLibro.linkUrl;
+    }
+
+    const { error: dbError } = await supabase.from('library_books').insert({
+      teacher_id: perfil.id,
+      class_code: nuevoLibro.claseDestino,
+      title: nuevoLibro.titulo,
+      pdf_url: publicUrl
+    });
+
+    if (dbError) alert("Error guardando en BD: " + dbError.message);
+    else {
+      alert("¡Libro asignado con éxito!");
+      setNuevoLibro({ ...nuevoLibro, titulo: '', archivo: null, linkUrl: '' });
+      fetchLibros(perfil.id);
     }
     setLoading(false);
   };
@@ -256,38 +274,6 @@ export default function ProfesorPage() {
     setLoading(false);
   };
 
-  const exportarPDF = async () => {
-    setLoading(true);
-    const element = document.getElementById('pdf-content'); // Usamos ID directo
-    if (!element) {
-      alert("No se encontró el contenido del reporte");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      // Limpieza temporal de sombras para el PDF
-      const canvas = await html2canvas(element, {
-        scale: 1, // Escala 1:1 para evitar errores de memoria/bloqueo
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: "#ffffff"
-      });
-      
-      const imgData = canvas.toDataURL('image/jpeg', 0.7); // JPEG para menor peso
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Reporte_LectoTech_${new Date().getTime()}.pdf`);
-      
-    } catch (error) {
-      console.error("Error PDF:", error);
-      alert("Error al generar el archivo. Por favor, intenta usar un navegador como Chrome o Edge.");
-    }
-    setLoading(false);
-  };
 
   const NavItem = ({ id, icon, label }: { id: typeof activeTab, icon: string, label: string }) => (
     <button
@@ -373,11 +359,6 @@ export default function ProfesorPage() {
           
           {activeTab === 'panel' && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-              <div className="flex justify-end mb-4">
-            <Button onClick={exportarPDF} disabled={loading} className="bg-[#FF8C00] hover:bg-orange-600 text-white shadow-lg flex gap-2">
-              <span>{loading ? '⌛' : '📄'}</span> {loading ? 'Generando...' : 'Descargar Reporte PDF'}
-            </Button>
-          </div>
           
           <div id="pdf-content" ref={statsRef} className="bg-white p-6 md:p-10 rounded-3xl shadow-xl border border-gray-100 space-y-10">
             {/* ENCABEZADO DEL REPORTE */}
@@ -629,19 +610,52 @@ export default function ProfesorPage() {
                         {clases.map(c => <option key={c.id} value={c.codigo}>{c.nombre} ({c.codigo})</option>)}
                       </select>
                     </div>
+
                     <div>
-                      <label className="block text-sm font-black text-gray-700 mb-2 uppercase tracking-wider">Archivo (Solo PDF)</label>
-                      <div className="relative group">
-                        <input 
-                          type="file" required accept="application/pdf"
-                          onChange={(e) => setNuevoLibro({...nuevoLibro, archivo: e.target.files?.[0] || null})}
-                          className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl cursor-pointer file:hidden"
-                        />
-                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-[#4CAF50] font-bold">
-                          {nuevoLibro.archivo ? '✅ Seleccionado' : '📁 Elegir Archivo'}
-                        </div>
+                      <label className="block text-sm font-black text-gray-700 mb-2 uppercase tracking-wider">Método de Carga</label>
+                      <div className="flex gap-2 mb-4">
+                        <button 
+                          type="button"
+                          onClick={() => setNuevoLibro({...nuevoLibro, metodo: 'archivo'})}
+                          className={`flex-1 py-3 rounded-xl font-bold transition-all ${nuevoLibro.metodo === 'archivo' ? 'bg-[#4CAF50] text-white shadow-md' : 'bg-gray-100 text-gray-500'}`}
+                        >
+                          📁 Subir PDF
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => setNuevoLibro({...nuevoLibro, metodo: 'link'})}
+                          className={`flex-1 py-3 rounded-xl font-bold transition-all ${nuevoLibro.metodo === 'link' ? 'bg-[#4CAF50] text-white shadow-md' : 'bg-gray-100 text-gray-500'}`}
+                        >
+                          🔗 Pegar Enlace
+                        </button>
                       </div>
                     </div>
+
+                    {nuevoLibro.metodo === 'archivo' ? (
+                      <div>
+                        <label className="block text-sm font-black text-gray-700 mb-2 uppercase tracking-wider">Archivo (Solo PDF)</label>
+                        <div className="relative group">
+                          <input 
+                            type="file" accept="application/pdf"
+                            onChange={(e) => setNuevoLibro({...nuevoLibro, archivo: e.target.files?.[0] || null})}
+                            className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl cursor-pointer file:hidden"
+                          />
+                          <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-[#4CAF50] font-bold">
+                            {nuevoLibro.archivo ? '✅ Seleccionado' : '📁 Elegir Archivo'}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-sm font-black text-gray-700 mb-2 uppercase tracking-wider">Enlace del Libro (Canva, Drive, etc.)</label>
+                        <input 
+                          type="url" value={nuevoLibro.linkUrl}
+                          onChange={(e) => setNuevoLibro({...nuevoLibro, linkUrl: e.target.value})}
+                          className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#4CAF50] focus:bg-white outline-none transition-all"
+                          placeholder="https://ejemplo.com/mi-libro"
+                        />
+                      </div>
+                    )}
                     <Button type="submit" disabled={loading} className="w-full bg-[#4CAF50] hover:bg-green-600 py-6 text-xl rounded-2xl shadow-lg transition-transform hover:-translate-y-1">
                       {loading ? 'Subiendo...' : 'Publicar en la Clase'}
                     </Button>
@@ -671,9 +685,12 @@ export default function ProfesorPage() {
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <a href={lib.pdf_url} target="_blank" rel="noreferrer" className="bg-gray-100 hover:bg-[#4CAF50] hover:text-white p-3 rounded-xl transition-all">
+                            <button 
+                              onClick={() => setSelectedBook(lib)}
+                              className="bg-gray-100 hover:bg-[#4CAF50] hover:text-white p-3 rounded-xl transition-all"
+                            >
                               👁️
-                            </a>
+                            </button>
                             <button onClick={() => handleDeleteBook(lib.id)} className="bg-gray-100 hover:bg-red-500 hover:text-white p-3 rounded-xl transition-all">
                               🗑️
                             </button>
@@ -807,11 +824,7 @@ export default function ProfesorPage() {
                             </div>
                             <div className="flex gap-2">
                               <button 
-                                onClick={async () => {
-                                  await supabase.from('messages').update({ is_archived: !showArchived }).eq('id', msg.id);
-                                  fetchMensajes(perfil.id);
-                                  alert(showArchived ? "Mensaje restaurado." : "Mensaje archivado.");
-                                }}
+                                onClick={() => handleArchiveMessage(msg.id)}
                                 className={`p-2 rounded-xl transition-all text-xs font-black uppercase ${showArchived ? 'bg-green-100 text-green-600 hover:bg-green-200' : 'bg-gray-100 text-gray-400 hover:bg-orange-100 hover:text-orange-600'}`}
                                 title={showArchived ? "Restaurar" : "Archivar"}
                               >
@@ -983,6 +996,36 @@ export default function ProfesorPage() {
 
             <div className="p-6 bg-gray-50 text-center">
               <Button onClick={() => setSelectedMessageForDetails(null)} className="bg-[#2A5C82] hover:bg-blue-700 px-12 py-3 rounded-xl font-black">Entendido</Button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Visor de Libro Modal */}
+      {selectedBook && (
+        <div className="fixed inset-0 bg-black/80 z-[100] flex flex-col items-center justify-center p-4">
+          <div className="w-full max-w-5xl bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[90vh]">
+            <div className="p-4 bg-[#2A5C82] text-white flex justify-between items-center">
+              <h2 className="font-bold truncate pr-4">{selectedBook.title}</h2>
+              <div className="flex gap-2">
+                <a 
+                  href={selectedBook.pdf_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="bg-green-500 hover:bg-green-600 px-4 py-1 rounded-lg font-bold text-sm flex items-center gap-2"
+                >
+                  <span>🌐</span> Abrir Externo
+                </a>
+                <button onClick={() => setSelectedBook(null)} className="bg-red-500 hover:bg-red-600 px-4 py-1 rounded-lg font-bold text-sm">Cerrar</button>
+              </div>
+            </div>
+            <div className="flex-1 bg-gray-100 relative">
+              <iframe 
+                src={selectedBook.pdf_url} 
+                className="w-full h-full border-none" 
+                title="Visor de Libro" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
             </div>
           </div>
         </div>

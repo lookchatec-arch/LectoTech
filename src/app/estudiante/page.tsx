@@ -40,7 +40,7 @@ export default function EstudianteLoginPage() {
       if (authMode === 'register') {
         const codigoUpper = classCode.trim().toUpperCase();
         
-        if (!['5TO-CLASE', '6TO-CLASE', '7MO-CLASE'].includes(codigoUpper)) {
+        if (!['QUINTO-CLASE', 'QUINTO-GRADO', '5TO-CLASE', 'SEXTO-CLASE', 'SEXTO-GRADO', '6TO-CLASE', 'SEPTIMO-CLASE', 'SEPTIMO-GRADO', '7MO-CLASE'].includes(codigoUpper)) {
           setErrorMsg("Código de clase inválido.");
           setLoading(false);
           return;
@@ -59,8 +59,13 @@ export default function EstudianteLoginPage() {
         }
 
         let grado = '5';
-        if (codigoUpper === '6TO-CLASE') grado = '6';
-        if (codigoUpper === '7MO-CLASE') grado = '7';
+        if (['QUINTO-CLASE', 'QUINTO-GRADO', '5TO-CLASE'].includes(codigoUpper)) {
+          grado = '5';
+        } else if (['SEXTO-CLASE', 'SEXTO-GRADO', '6TO-CLASE'].includes(codigoUpper)) {
+          grado = '6';
+        } else if (['SEPTIMO-CLASE', 'SEPTIMO-GRADO', '7MO-CLASE'].includes(codigoUpper)) {
+          grado = '7';
+        }
 
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
@@ -252,15 +257,6 @@ export default function EstudianteLoginPage() {
             {loading ? 'Procesando...' : (authMode === 'login' ? 'Entrar al Mundo' : 'Crear Perfil y Jugar')}
           </Button>
 
-          <div className="pt-6 border-t border-gray-100 mt-6">
-            <Button 
-              type="button"
-              onClick={() => router.push('/dashboard?estudiante=Desarrollo&grado=5')}
-              className="w-full text-sm py-4 shadow-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl flex items-center justify-center gap-2 font-bold"
-            >
-              🧪 Entrar como Versión Desarrollo
-            </Button>
-          </div>
         </form>
       </div>
     </div>

@@ -36,7 +36,7 @@ export default function Home() {
               
               <Button 
                 onClick={() => router.push('/estudiante')}
-                className="w-full text-xl py-6 shadow-md bg-white border-2 border-[#4CAF50] text-[#2A5C82] hover:bg-green-50 hover:-translate-y-1 transition-all rounded-2xl flex items-center justify-center gap-3 font-bold"
+                className="w-full text-xl py-6 shadow-md bg-[#4CAF50] hover:bg-green-600 hover:-translate-y-1 transition-all text-white rounded-2xl flex items-center justify-center gap-3 font-bold border-none"
               >
                 <span className="text-3xl">👦</span> Soy Estudiante
               </Button>
